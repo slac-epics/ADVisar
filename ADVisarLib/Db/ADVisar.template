@@ -1,0 +1,7 @@
+
+
+record( stringout, "$(IOC):ADVisar:STATUS" )
+{
+	field( DTYP, "Soft Channel" )
+	field( VAL,	 "Unknown status" )
+}

@@ -1,0 +1,16 @@
+#
+# ADVisar database substitutions file
+#
+
+# Generate ADVisar db file 
+#	Macros:
+#		TODO:	List here any macros used in the template
+#				Note which ones have defaults.
+file _ADVisar.template
+{
+	{
+		# Hack till msi supports empty substitutions
+		IOC		=	$(IOC),
+	}
+}
+
