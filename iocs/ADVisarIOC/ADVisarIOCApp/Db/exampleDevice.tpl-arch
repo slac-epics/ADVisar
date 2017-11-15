@@ -1,0 +1,18 @@
+# Archive list for Scientech Vector S310 Power/Energy Meter
+$(P):ID				10	monitor
+$(P):RAWAVAL		1	
+$(P):DARKAVAL		1
+$(P):SET_DARKAVAL	1	monitor
+$(P):RAWDARKDIFF	1
+$(P):GetDetMode		1
+$(P):SetDetMode		1	monitor
+$(P):GetDetType		1
+$(P):SetDetType		1	monitor
+$(P):GetRange		1
+$(P):SetRange		1	monitor
+$(P):GetCount		1
+$(P):SetCount		1	monitor
+$(P):GetCalib		1
+$(P):SetCalib		1	monitor
+$(P):GetAtten		1
+$(P):SetAtten		1	monitor

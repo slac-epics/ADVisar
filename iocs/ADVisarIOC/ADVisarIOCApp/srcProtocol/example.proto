@@ -1,0 +1,59 @@
+# This is an example protocol file
+# This protocol file was based on the Scientech Vector S310 Calorimeter/Power Meter
+# No need to keep this file unless you want to use it for examples.
+InTerminator  = CR;
+OutTerminator = CR;
+ReplyTimeout  =  2000;
+ReadTimeout   =  100;
+WriteTimeout  =  100;
+ExtraInput    = Ignore;
+
+#read_wm_debug    { out "0";				in "%(\$1:STRVAL.VAL)s";}
+#read_wm           { out "0";				in "%(\$1:STRVAL.VAL)s";}
+
+get_id	{	out "*IDN?";		in "%39c"	}
+
+get_det {	out "SENS?";		in "%{PYRO|CAL|PHR|ULTRA}" }
+
+set_det {	out "SENS_%{PYRO|CAL|PHR|ULTRA}";		}
+
+get_mode {	out "MODE?";		in "%{VOLTS|ENERGY|AVGE|AVGP}" }
+
+set_mode {	out "MODE_%{VOLTS|ENERGY|AVGE|AVGP}"; }
+
+get_val	{	out "SND?";			in "%f" }
+
+get_range { out "RANGE?";		in "%{AUTO|1|2|3|4|5}"	}
+
+set_range {	out "RANGE_%{AUTO|1|2|3|4|5}";				}
+
+# Number of pulses this run
+get_pulse { out "PULSES?";		in "%u" }
+
+# Number of pulses used to compute average in AVGE mode
+get_count { out "COUNT?";		in "%u" }
+
+set_count { out "COUNT_%u";				}
+
+get_calib { out "CALIB?";		in "%u" }
+
+set_calib { out "CALIB_%u";				}
+
+get_atten { out "ATTEN?";		in "%u" }
+
+set_atten { out "ATTEN_%u";				}
+
+zero	{	out "ZERO";					}
+
+get_pyro_spd	{	out	"PSPEED?";	in "%{HF|BL}"	}
+
+set_pyro_spd	{	out "PSPEED %{HF|BL}";		}
+
+get_cal_spd		{	out	"CSPEED?";	in "%u" }
+
+set_cal_spd		{	out	"CSPEED_%u";		}
+
+get_cal_delay	{	out	"CDELAY?";	in "%u"	}
+
+set_cal_delay	{	out "CDELAY_%u";		}
+

@@ -1,0 +1,34 @@
+#
+# ADVisarIOC substitutions file
+#
+# Generate a list of PV's which will be expanded
+# once using the $(IOC) macro for each IOC instance.
+#
+# Typically, IOC will be expanded in
+#	iocBoot/<ioc_name>/Makefile
+# so no need to define it here.
+#
+
+# Generate iocAdmin archive PV's 
+#	Macros:
+#		IOC		- PV prefix for all iocAdmin PV's
+file archive_iocAdmin.tpl-arch
+{
+	{
+		# Hack till msi supports empty substitutions
+		IOC=$(IOC)
+	}
+}
+
+# Generate Save/Restore archive PV's
+#	Macros:
+# Typically, IOC will be expanded in the iocBoot/<ioc_name>/Makefile
+file archive_SR.tpl-arch
+{
+	{
+		# Hack till msi supports empty substitutions
+		IOC=$(IOC)
+	}
+}
+
+# TODO: Add your custom template expansions here

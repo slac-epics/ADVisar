@@ -1,0 +1,31 @@
+#==============================================================================
+#
+# Abs:  IOC Administration Records
+#
+# Name: iocAdmin.substitutions
+#
+#==============================================================================
+#
+file access.db
+{
+	pattern
+	{ DEV    , MANAGE      }
+	{ $(IOC) , IOCMANAGERS }
+}
+
+file ioc.db
+{
+	pattern
+	{ IOCNAME }
+	{ $(IOC)  }
+}
+
+file iocCluster.db
+{
+#                   Pool   Size
+	pattern
+	{ IOCNAME ,  P   ,  S   , TYPE   }
+# System Pool
+	{ $(IOC)  ,  1   ,  0   , System }
+	{ $(IOC)  ,  1   ,  1   , System }
+}

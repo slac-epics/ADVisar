@@ -1,0 +1,386 @@
+#
+# Example serial device database template file
+#
+# This file was originally done for a
+# Scientech Vector S310 Calorimeter
+#
+# Required Macros:
+#   P
+#       EPICS prefix.
+#       Every PV for this device starts with this prefix    
+# Optional Macros:
+#   FAST_UPDATE
+#       Rate at which to query often changing values such as
+#       current measurement, status, statistics, etc.
+#       Defaults to .5 seconds
+#   SLOW_UPDATE
+#       Rate at which to query slow changing values such as
+#       measurement mode and other settings.
+#       Defaults to 5 seconds
+#
+
+# User can enable or disable all serial communications
+# with the device using this PV.
+# Turning it off keeps error messages from spewing to the console.
+record( bo, "$(P):COMM:ENABLE" )
+{
+    field( DESC, "User Enable/Disable of comms" )
+    field( ZNAM, "Comm Disabled!" )
+    field( ONAM, "Comm Enabled" )
+    field( FLNK, "$(P):ID PP" )
+    field( PINI, "YES" )
+}
+
+# This record looks at $(P):COMM:ENABLE and
+# one serial query PV that is used to see if
+# the device is available and talking to us.
+record( calcout, "$(P):COMM:NOT_READY" )
+{
+    field( INPA, "$(P):COMM:ENABLE CPP" )
+    field( INPB, "$(P):ID CPP MS" )
+    field( CALC, "!A" )
+    field( OOPT, "When Non-zero" )
+    field( OUT,  "$(P):COMM:SHUTDOWN PP" )
+    field( IVOA, "Set output to IVOV" )
+    field( IVOV, "1" )
+}
+
+# This fanout writes 0 to one or more PV's
+# which can be used to set status or other
+# PV's to indicate communication is down.
+record( dfanout, "$(P):COMM:SHUTDOWN" )
+{
+    field( DOL,  "0" )
+    field( OMSL, "closed_loop" )
+#    field( OUTA, "$(P):STATUS PP" )
+}
+
+# Read the device ID string
+record( stringin, "$(P):ID" )
+{
+	field( DTYP, "stream" )
+	field( PINI, "YES" )
+	field( INP, "@example.proto get_id $(P)" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( ai, "$(P):RawValue" )
+{
+	field( DTYP, "stream" )
+	field( INP, "@example.proto get_val $(P)" )
+	field( EGU, "W" )
+	field( PREC, 5 )
+	field( SCAN, "$(FAST_UPDATE=.5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+    field( FLNK, "$(P):GetValue PP" )
+}
+
+
+record( dfanout, "$(P):SetDarkValue" )
+{
+	field( DOL,  "$(P):RawValue NPP" )
+	field( OUTA, "$(P):DarkValue PP" )
+}
+
+
+record( ai, "$(P):DarkValue" )
+{
+	field( EGU, "W" )
+	field( PREC, 5 )
+	field( INP,  0 )
+	field( PINI, "YES" )
+    field( FLNK, "$(P):GetValue PP" )
+	field( SCAN, "$(FAST_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+
+record( calc, "$(P):GetValue" )
+{
+	field( CALC, "(A-B)" )
+	field( EGU, "W" )
+	field( PREC, 5 )
+	field( INPA, "$(P):RawValue NPP MS" )	# current raw wattmeter reading
+	field( INPB, "$(P):DarkValue NPP MS" )	# dark (background) wm reading
+}
+
+record( mbbi,	"$(P):GetDetMode" )
+{
+	field( DTYP, "stream"	)
+	field( INP,	 "@example.proto get_mode $(P)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( TWVL, "2" )
+	field( THVL, "3" )
+	field( ZRST, "Volts" )
+	field( ONST, "Energy" )
+	field( TWST, "Avg Energy" )
+	field( THST, "Power" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+    field( FLNK, "$(P):Units PP" )
+}
+
+# Valid Detector Modes
+#	Pyroelectric Detectors:
+#		Volts, Energy, Avg Energy, Power
+#	Calorimeter Detectors:
+#		Energy, Power
+#	Ultra Detectors:
+#		Power
+record( mbbo,	"$(P):SetDetMode" )
+{
+	field( DTYP, "stream"	)
+	field( OUT,	"@example.proto set_mode $(P)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( TWVL, "2" )
+	field( THVL, "3" )
+	field( ZRST, "Volts" )
+	field( ONST, "Energy" )
+	field( TWST, "Avg Energy" )
+	field( THST, "Power" )
+    field( FLNK, "$(P):GetDetMode PP" )
+}
+
+record( mbbi,	"$(P):Units" )
+{
+    field( INP,  "$(P):GetDetMode NPP MS" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( TWVL, "2" )
+	field( THVL, "3" )
+	field( ZRST, "V" )
+	field( ONST, "J" )
+	field( TWST, "J" )
+	field( THST, "W" )
+}
+
+record( mbbi,	"$(P):GetDetType" )
+{
+	field( DTYP, "stream"	)
+	field( INP,	 "@example.proto get_det $(P)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( TWVL, "2" )
+	field( THVL, "3" )
+	field( ZRST, "PYRO" )
+	field( ONST, "CAL" )
+	field( TWST, "PHR" )
+	field( THST, "ULTRA" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( mbbo,	"$(P):SetDetType" )
+{
+	field( DTYP, "stream"	)
+	field( OUT,	 "@example.proto set_det $(P)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( TWVL, "2" )
+	field( THVL, "3" )
+	field( ZRST, "PYRO" )
+	field( ONST, "CAL" )
+	field( TWST, "PHR" )
+	field( THST, "ULTRA" )
+    field( FLNK, "$(P):GetDetType PP" )
+}
+
+record( mbbi, "$(P):GetRange" )
+{
+	field( DESC, "Range AUTO or 1-5" )
+	field( DTYP, "stream" )
+	field( INP, "@example.proto get_range $(P)" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( TWVL, "2" )
+	field( THVL, "3" )
+	field( FRVL, "4" )
+	field( FVVL, "5" )
+	field( ZRST, "Auto" )
+	field( ONST, "1" )
+	field( TWST, "2" )
+	field( THST, "3" )
+	field( FRST, "4" )
+	field( FVST, "5" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( mbbo, "$(P):SetRange" )
+{
+	field( DESC, "Range AUTO or 1-5" )
+	field( DTYP, "stream" )
+	field( OUT, "@example.proto set_range $(P)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( TWVL, "2" )
+	field( THVL, "3" )
+	field( FRVL, "4" )
+	field( FVVL, "5" )
+	field( ZRST, "Auto" )
+	field( ONST, "1" )
+	field( TWST, "2" )
+	field( THST, "3" )
+	field( FRST, "4" )
+	field( FVST, "5" )
+    field( FLNK, "$(P):GetRange PP" )
+}
+
+record( longin, "$(P):GetPulseCount" )
+{
+	field( DESC, "Pulse count" )
+	field( DTYP, "stream" )
+	field( INP, "@example.proto get_pulse $(P)" )
+	field( SCAN, "$(FAST_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( longin, "$(P):GetAvgEnergyCount" )
+{
+	field( DESC, "# of pulses in avg mode" )
+	field( DTYP, "stream" )
+	field( INP, "@example.proto get_count $(P)" )
+	field( SCAN, "$(FAST_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( longout, "$(P):SetAvgEnergyCount" )
+{
+	field( DESC, "# of pulses in avg mode" )
+	field( DOL,  "10" )
+	field( DTYP, "stream" )
+	field( OUT,  "@example.proto set_count $(P)" )
+    field( FLNK, "$(P):GetAvgEnergyCount PP" )
+	field( PINI, "YES" )
+}
+
+record( longin, "$(P):GetCalib" )
+{
+	field( DESC, "Calibration constant" )
+	field( DTYP, "stream" )
+	field( INP, "@example.proto get_calib $(P)" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( longout, "$(P):SetCalib" )
+{
+	field( DESC, "Calibration constant" )
+	field( DTYP, "stream" )
+	field( OUT, "@example.proto set_calib $(P)" )
+    field( FLNK, "$(P):GetCalib PP" )
+}
+
+record( longin, "$(P):GetAtten" )
+{
+	field( DESC, "Attenuation factor" )
+	field( DTYP, "stream" )
+	field( INP, "@example.proto get_atten $(P)" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( longout, "$(P):SetAtten" )
+{
+	field( DESC, "Attenuation factor" )
+	field( DTYP, "stream" )
+	field( OUT, "@example.proto set_atten $(P)" )
+    field( FLNK, "$(P):GetAtten PP" )
+}
+
+record( mbbi,	"$(P):GetPyroSpeed" )
+{
+	field( DTYP, "stream"	)
+	field( INP,	 "@example.proto get_pyro_spd $(P)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( ZRST, "HF" )
+	field( ONST, "BL" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( mbbo,	"$(P):SetPyroSpeed" )
+{
+	field( DTYP, "stream"	)
+	field( OUT,	 "@example.proto set_pyro_spd $(P)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( ZRST, "HF" )
+	field( ONST, "BL" )
+    field( FLNK, "$(P):GetPyroSpeed PP" )
+}
+
+record( mbbi,	"$(P):GetPyroSpeed" )
+{
+	field( DTYP, "stream"	)
+	field( INP,	 "@example.proto get_pyro_spd $(P)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( ZRST, "HF" )
+	field( ONST, "BL" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( mbbo,	"$(P):SetPyroSpeed" )
+{
+	field( DTYP, "stream"	)
+	field( OUT,	 "@example.proto set_pyro_spd $(P)" )
+	field( ZRVL, "0" )
+	field( ONVL, "1" )
+	field( ZRST, "HF" )
+	field( ONST, "BL" )
+    field( FLNK, "$(P):GetPyroSpeed PP" )
+}
+
+record( longin, "$(P):GetCalSpeed" )
+{
+	field( DESC, "Cal Watts Disp Resp Spd" )
+	field( DTYP, "stream" )
+	field( INP,  "@example.proto get_cal_spd $(P)" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( longout, "$(P):SetCalSpeed" )
+{
+	field( DESC, "Cal Watts Disp Resp Spd" )
+	field( DTYP, "stream" )
+	field( OUT,  "@example.proto set_cal_spd $(P)" )
+    field( FLNK, "$(P):GetCalSpeed PP" )
+}
+
+record( longin, "$(P):GetCalDelay" )
+{
+	field( DESC, "Calorimeter Delay" )
+	field( DTYP, "stream" )
+	field( INP,  "@example.proto get_cal_delay $(P)" )
+	field( SCAN, "$(SLOW_UPDATE=5 second)" )
+    field( SDIS, "$(P):COMM:NOT_READY" )
+    field( DISS, "INVALID" )
+}
+
+record( longout, "$(P):SetCalDelay" )
+{
+	field( DESC, "Calorimeter Delay" )
+	field( DTYP, "stream" )
+	field( OUT,  "@example.proto set_cal_delay $(P)" )
+    field( FLNK, "$(P):GetCalDelay PP" )
+}

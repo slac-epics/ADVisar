@@ -1,7 +1,298 @@
 
 
-record( stringout, "$(IOC):ADVisar:STATUS" )
+record( stringin, "(BASE):MODEL )
 {
-	field( DTYP, "Soft Channel" )
-	field( VAL,	 "Unknown status" )
+	field(DESC, "Camera Model")
+	#field( DTYP, "Soft Channel" )
+	#field( VAL,	 "C7700" )
+	  field(DTYP, "stream")
+	  field(INP, "@ADVisar.proto get_model($(BASE)) $(port)")
+	  field(SCAN, "1 second")
+	  field(PINI, "YES")
 }
+
+record( stringout, "(BASE):ID )
+{
+	field(DESC, "Camera manufacturer")
+	field( DTYP, "Soft Channel" )
+	field( VAL,	 "Hamamatsu" )
+}
+
+record( ai, "(BASE):N_OF_ROW )
+{
+	field(DESC, "Number of rows")
+	field( DTYP, "Soft Channel" )
+	field( VAL, 1344 )
+}
+
+record( ai, "(BASE):N_OF_COL )
+{
+	field(DESC, "Number or columns")
+	field( DTYP, "Soft Channel" )
+	field( VAL,1024)
+}
+
+record( ai, "(BASE):N_OF_BITS)
+{
+	field(DESC, "Number of bits per pixel")
+	field( DTYP, "Soft Channel" )
+	field( VAL,16)
+}
+
+
+
+record(ai, "$(BASE):ERROR") {
+  field(DESC, "???")
+  field(DTYP, "stream")
+  field(INP, "")
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+  field(EGU, "??????")
+}
+
+
+
+
+record(ai, "$(BASE):FOCUSTIMEOVER") {
+  field(DESC, "???")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_focus_time_over($(BASE)) $(port)")
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+  field(EGU, "??????")
+}
+
+record(ao, "$(BASE):FOCUSTIMEOVER:SET") {
+  field(DESC, "???")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_focus_time_over($(BASE)) $(port)")
+  field(EGU, "??????")
+}
+
+record(stringin, "$(BASE):EXPOSURE") {
+  field(DESC, "Exposure time")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_exposure_time($(BASE)) $(port)")
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+  field(EGU, "??????")
+}
+
+record(ao, "$(BASE):EXPOSURE:SET") {
+  field(DESC, "Exposure time setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_exposure_time($(BASE)) $(port)") ## Hot to put units here?
+  field(EGU, "??????")
+}
+
+record(ao, "$(BASE):EXPOSUREUNITS:SET") {
+  field(DESC, "Exposure time units")
+ # field(DTYP, "stream")
+ # field(INP, "@ADVisar.proto set_exposure_time($(BASE)) $(port)") ## How to put units here?
+ # field(EGU, "??????")
+}
+
+
+#########3
+record(ai, "$(BASE):Gain") {
+  field(DESC, "II-Gain")
+  field( DTYP, "Soft Channel" )
+  field(VAL,"$(BASE):II_GAIN PP"
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+}
+
+record(ai, "$(BASE):Gain:SET") {
+  field(DESC, "II-Gain setter")
+  field(DTYP, "Soft Channel" )
+  field(OUT,"$(BASE):II_GAIN:SET PP"
+}
+
+
+record(ai, "$(BASE):II_GAIN") {
+  field(DESC, "II-Gain")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_II_gain($(BASE)) $(port)")
+  field(SCAN, "Passive")
+}
+
+record(ao, "$(BASE):II_GAIN:SET") {
+  field(DESC, "II-Gain setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_II_gain($(BASE)) $(port)") 
+
+}
+
+$(BASE):SHUTTER
+
+record(ai, "$(BASE):SHUTTER") {
+  field(DESC, "Shutter")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_II_gain($(BASE)) $(port)")
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+}
+
+record(ao, "$(BASE):SHUTTER:SET") {
+  field(DESC, "Shutter setter")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto set_II_gain($(BASE)) $(port)") 
+
+}
+
+record(bi, "$(BASE):SHUTTER")") {
+  field(DESC, "Shutter")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_II_gain($(BASE)) $(port)")
+  field(ZNAM, "Closed")
+  field(ONAM, "Open")
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+record(bo, "$(BASE):SHUTTER:SET") {
+  field(DESC, "Shutter setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_II_gain($(BASE)) $(port)")
+  field(ZNAM, "Closed")
+  field(ONAM, "Open")
+}
+
+
+record(bi, "$(BASE):TRIG_MODE")") {
+  field(DESC, "Trigger mode")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto set_trigger_mode($(BASE)) $(port)")
+  field(ZNAM, "Single")
+  field(ONAM, "Cont")
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+record(bo, "$(BASE):TRIG_MODE"):SET") {
+  field(DESC, "Trigger mode setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_trigger_mode($(BASE)) $(port)")
+  field(ZNAM, "Single")
+  field(ONAM, "Cont")
+}
+
+record(bi, "$(BASE):MODE")") {
+  field(DESC, "Trigger mode")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto set_mode($(BASE)) $(port)")
+  field(ZNAM, "Focus")
+  field(ONAM, "Operate")
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+record(bo, "$(BASE):MODE"):SET") {
+  field(DESC, "Trigger mode setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_mode($(BASE)) $(port)")
+  field(ZNAM, "Focus")
+  field(ONAM, "Operate")
+}
+
+
+record(mbbi, "$(BASE):GATE_MODE") {
+  field(DESC, "Gate mode")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_gate_mode($(BASE)) $(port)"
+  field(ZRST, "Normal")
+  field(ZRVL, 0)
+  field(ONST, "Gate")
+  field(ONVL, 1)
+  field(TWST, "Open Fixed")
+  field(TWVL, 2)
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+record(mbbo, "$(BASE):GATE_MODE:SET") {
+  field(DESC, "Gate mode setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_gate_mode($(BASE)) $(port)"
+  field(ZRST, "Normal")
+  field(ZRVL, 0)
+  field(ONST, "Gate")
+  field(ONVL, 1)
+  field(TWST, "Open Fixed")
+  field(TWVL, 2)
+}
+
+record(mbbi, "$(BASE):TRIG_STATUS") {
+  field(DESC, "Trigger status")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_truger_status($(BASE)) $(port)"
+  field(ZRST, "Ready")
+  field(ZRVL, 0)
+  field(ONST, "Fired")
+  field(ONVL, 1)
+  field(TWST, "Do Reset")
+  field(TWVL, 2)
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+## ????
+
+record(mbbi, "$(BASE):TIME_RANGE") {
+  field(DESC, "Time Range")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_time_range($(BASE)) $(port)"
+  field(ZRST, "Normal")
+  field(ZRVL, 0)
+  field(ONST, "Gate")
+  field(ONVL, 1)
+  field(TWST, "Open Fixed")
+  field(TWVL, 2)
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+0.5 ns
+1 ns
+2 ns
+5 ns
+10 ns
+20 ns
+50 ns
+100 ns
+200 ns
+500 ns
+1 us
+2 us
+5 us
+10 us
+20 us
+50 us
+100 us
+200 us
+500 us
+1 ms
+
+
+record(mbbo, "$(BASE):TIME_RANGE:SET") {
+  field(DESC, "Time Range setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_time_range($(BASE)) $(port)"
+  field(ZRST, "Normal")
+  field(ZRVL, 0)
+  field(ONST, "Gate")
+  field(ONVL, 1)
+  field(TWST, "Open Fixed")
+  field(TWVL, 2)
+}
+
+## ????
+
+
+record(waveform, "$(BASE):LIVE_IMAGE_FAST") {
+}
+
+
+
+
+
