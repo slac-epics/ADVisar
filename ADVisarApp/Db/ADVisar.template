@@ -1,0 +1,334 @@
+## ADVisar.template
+## Template database file to control the features of a Visar camera.
+
+include "ADBase.template"
+
+#Por   field(PINI, "YES") em todos os out e polos no .re do autosave
+
+
+## These are the records from ADBase.template that we modify
+
+record( stringin, "$(P)$(R):Manufacturer_RBV )
+{
+	field(DESC, "Camera manufacturer")
+	field( VAL,	 "Hamamatsu" )
+	field(SCAN, "Passive")
+}
+
+record( stringin, "$(P)$(R):Model_RBV )
+{
+	field(DESC, "Camera Model")
+	#field( VAL,	 "C7700" )
+	  field(DTYP, "stream")
+	  field(INP, "@ADVisar.proto get_model($(P)$(R)) $(PORT).SER")
+	  field(SCAN, "Passive")
+	  field(PINI, "YES")
+}
+
+record( longin, "$(P)$(R):MaxSizeY_RBV )
+{
+	field(DESC, "Number of rows")
+	field( VAL, 1344 )
+	field(SCAN, "Passive")
+}
+
+record( longin, "$(P)$(R):MaxSizeX_RBV )
+{
+	field(DESC, "Number or columns")
+	field( VAL,1024)
+	field(SCAN, "Passive")
+}
+
+record( longin, "$(P)$(R):BitsPerPixel_RBV)
+{
+	field(DESC, "Number of bits per pixel")
+	field( VAL,16)
+	field(SCAN, "Passive")
+}
+
+
+record(ai, "$(P)$(R):AcquireTime_RBV") {
+  field(DESC, "Exposure time (ns)")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_exposure_time($(P)$(R)) $(PORT).SER")
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+  field(EGU, "ns")
+}
+
+record(ao, "$(P)$(R):AcquireTime") {
+  field(DESC, "Exposure time (ns)")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_exposure_time($(P)$(R)) $(PORT).SER")
+  field(EGU, "ns")
+}
+
+
+record(ai, "$(P)$(R):Gain_RBV") {
+  field(DESC, "II-Gain")
+  field(VAL,"$(P)$(R):II_GAIN PP"
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+}
+
+record(ao, "$(P)$(R):Gain") {
+  field(DESC, "II-Gain setter")
+  field(DTYP, "Soft Channel" )
+  field(OUT,"$(P)$(R):II_GAIN:SET PP"
+}
+
+record(mbbi, "$(P)$(R):ImageMode_RBV") {
+  field(DESC, "Trigger mode")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto set_trigger_mode($(P)$(R)) $(PORT).SER")
+
+  field(ZRST, "Single")
+  field(ZRVL, "0")
+  field(ONST, "Continuous")
+  field(ONVL, "1")
+  field(TWST, "")
+  field(TWVL, "")
+
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+record(mbbo, "$(P)$(R):ImageMode") {
+  field(DESC, "Trigger mode setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_trigger_mode($(P)$(R)) $(PORT).SER")
+
+  field(ZRST, "Single")
+  field(ZRVL, "0")
+  field(ONST, "Continuous")
+  field(ONVL, "1")
+  field(TWST, "")
+  field(TWVL, "")
+}
+
+record(mbbi, "$(P)$(R):TriggerMode_RBV") {
+  field(DESC, "Mode")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto set_mode($(P)$(R)) $(PORT).SER")
+
+  field(ZRST, "Focus")
+  field(ZRVL, "0")
+  field(ONST, "Operate")
+  field(ONVL, "1")
+
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+record(mbbo, "$(P)$(R):TriggerMode") {
+  field(DESC, "Mode setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_mode($(P)$(R)) $(PORT).SER")
+
+  field(ZRST, "Focus")
+  field(ZRVL, "0")
+  field(ONST, "Operate")
+  field(ONVL, "1")
+
+}
+
+# These are records new to the Visar camera
+##############################
+
+record(ai, "$(P)$(R):IIGain_RBV") {
+  field(DESC, "II-Gain")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_II_gain($(P)$(R)) $(PORT).SER")
+  field(SCAN, "Passive")
+}
+
+record(ao, "$(P)$(R):IIGain") {
+  field(DESC, "II-Gain setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_II_gain($(P)$(R)) $(PORT).SER")
+}
+
+
+record(ai, "$(P)$(R):ErrorCode") {
+  field(DESC, "???")
+  field(DTYP, "stream")
+  field(INP, "")
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+  field(EGU, "??????")
+}
+
+
+record(ai, "$(P)$(R):FocusTimeOver_RBV") {
+  field(DESC, "???")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_focus_time_over($(P)$(R)) $(PORT).SER")
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+  field(EGU, "??????")
+}
+
+record(ao, "$(P)$(R):FocusTimeOver") {
+  field(DESC, "???")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_focus_time_over($(P)$(R)) $(PORT).SER")
+  field(EGU, "??????")
+}
+
+
+record(ai, "$(P)$(R):Shutter_RBV") {
+  field(DESC, "Shutter")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_II_gain($(P)$(R)) $(PORT).SER")
+  field(SCAN, ".5 second")
+  field(PINI, "YES")
+}
+
+record(ao, "$(P)$(R):Shutter") {
+  field(DESC, "Shutter setter")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto set_II_gain($(P)$(R)) $(PORT).SER") 
+
+}
+
+
+
+record(mbbi, "$(P)$(R):GateMode_RBV") {
+  field(DESC, "Gate mode")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_gate_mode($(P)$(R)) $(PORT).SER"
+  field(ZRST, "Normal")
+  field(ZRVL, 0)
+  field(ONST, "Gate")
+  field(ONVL, 1)
+  field(TWST, "Open Fixed")
+  field(TWVL, 2)
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+record(mbbo, "$(P)$(R):GateMode") {
+  field(DESC, "Gate mode setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_gate_mode($(P)$(R)) $(PORT).SER"
+  field(ZRST, "Normal")
+  field(ZRVL, 0)
+  field(ONST, "Gate")
+  field(ONVL, 1)
+  field(TWST, "Open Fixed")
+  field(TWVL, 2)
+}
+
+record(mbbi, "$(P)$(R):TriggerStatus_RBV") {
+  field(DESC, "Trigger status")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_trigger_status($(P)$(R)) $(PORT).SER"
+  field(ZRST, "Ready")
+  field(ZRVL, 0)
+  field(ONST, "Fired")
+  field(ONVL, 1)
+  field(TWST, "DoReset")
+  field(TWVL, 2)
+
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+
+#{0.5 ns|1 ns|2 ns|5 ns|10 ns|20 ns|50 ns|100 ns|200 ns|500 ns|1 us|2 us|5 us|10 us|20 us|50 us}
+#"100 us","200 us","500 us","1 ms"
+
+record(mbbi, "$(P)$(R):TimeRange_RBV") {
+  field(DESC, "Time Range")
+  field(DTYP, "stream")
+  field(INP, "@ADVisar.proto get_time_range($(P)$(R)) $(PORT).SER"
+
+  field(ZRST, "0.5 ns")
+  field(ZRVL, 0)
+  field(ONST, "1 ns")
+  field(ONVL, 1)
+  field(TWST, "2 ns")
+  field(TWVL, 2)
+  field(THST, "5 ns")
+  field(THVL, 3)
+  field(FRST, "10 ns")
+  field(FRVL, 4)
+  field(FVST, "20 ns")
+  field(FVVL, 5)
+  field(SSST, "50 ns")
+  field(SXVL, 6)
+  field(SVST, "100 ns")
+  field(SVVL, 7)
+  field(EIST, "200 ns")
+  field(EIVL, 8)
+  field(NIST, "500 ns")
+  field(NIVL, 9)
+  field(TEST, "1 us")
+  field(TEVL, 10)
+  field(ELST, "2 us")
+  field(ELVL, 11)
+  field(TVST, "5 us")
+  field(TVVL, 12)
+  field(TTST, "10 us")
+  field(TTVL, 13)
+  field(FTST, "20 us")
+  field(FTVL, 14)
+  field(FFST, "50 us")
+  field(FFVL, 15)
+
+  field(PINI, "YES")
+  field(SCAN, ".5 second")
+}
+
+record(mbbo, "$(P)$(R):TimeRange") {
+  field(DESC, "Time Range setter")
+  field(DTYP, "stream")
+  field(OUT, "@ADVisar.proto set_time_range($(P)$(R)) $(PORT).SER"
+
+  field(ZRST, "0.5 ns")
+  field(ZRVL, 0)
+  field(ONST, "1 ns")
+  field(ONVL, 1)
+  field(TWST, "2 ns")
+  field(TWVL, 2)
+  field(THST, "5 ns")
+  field(THVL, 3)
+  field(FRST, "10 ns")
+  field(FRVL, 4)
+  field(FVST, "20 ns")
+  field(FVVL, 5)
+  field(SSST, "50 ns")
+  field(SXVL, 6)
+  field(SVST, "100 ns")
+  field(SVVL, 7)
+  field(EIST, "200 ns")
+  field(EIVL, 8)
+  field(NIST, "500 ns")
+  field(NIVL, 9)
+  field(TEST, "1 us")
+  field(TEVL, 10)
+  field(ELST, "2 us")
+  field(ELVL, 11)
+  field(TVST, "5 us")
+  field(TVVL, 12)
+  field(TTST, "10 us")
+  field(TTVL, 13)
+  field(FTST, "20 us")
+  field(FTVL, 14)
+  field(FFST, "50 us")
+  field(FFVL, 15)
+
+}
+
+
+
+## ????
+
+
+record(waveform, "$(P)$(R):LIVE_IMAGE_FAST") {
+}
+
+
+
+
+
