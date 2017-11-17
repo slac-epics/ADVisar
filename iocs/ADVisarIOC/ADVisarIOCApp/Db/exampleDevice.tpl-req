@@ -1,8 +1,0 @@
-# Autosave list for Scientech Vector S310 Power/Energy Meter
-$(P):SET_DARKAVAL
-$(P):SetDetMode	
-$(P):SetDetType
-$(P):SetRange
-$(P):SetCount
-$(P):SetCalib
-$(P):SetAtten
