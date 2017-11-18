@@ -16,18 +16,18 @@ INSTALL_LOCATION_BIN = $(TOP)/bin
 TARGETS = envPaths
 
 # Make sure these archive files are fully expanded
-USR_ARCHIVEFLAGS += -V
+#USR_ARCHIVEFLAGS += -V
 
 #----------------------------------------------------
 # Create and install IOC archive file
 #
-ARCHIVE += $$IOCNAME.archive
+#ARCHIVE += $$IOCNAME.archive
 
 #----------------------------------------------------
 # Create and install IOC autosave file
 #
-REQ += $$IOCNAME.req
+#REQ += $$IOCNAME.req
 
 include $(TOP)/configure/RULES.ioc
--include $(TOP)/configure/RULES.archive
--include $(TOP)/configure/RULES.autosave
+#-include $(TOP)/configure/RULES.archive
+#-include $(TOP)/configure/RULES.autosave
