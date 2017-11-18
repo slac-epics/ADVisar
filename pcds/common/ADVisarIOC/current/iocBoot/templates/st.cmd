@@ -23,37 +23,21 @@ staubli_registerRecordDeviceDriver(pdbbase)
 # Asyn support
 
 ## Asyn record support
-#$$LOOP(ROBOT)
+
 #dbLoadRecords("$(ASYN)/db/asynRecord.db","P=$$NAME,R=:asyn,PORT=bus$$INDEX,ADDR=0,OMAX=0,IMAX=0")
+
 drvAsynIPPortConfigure ("bus$$INDEX","$$IP:$$PORT TCP", 0, 0, 0)
-#$$ENDLOOP(ROBOT)
+
 
 # Asyn tracing settings
-#$$LOOP(ROBOT)
-$$IF(ASYNTRACE)
-asynSetTraceFile("bus$$INDEX", 0, "$(IOC_DATA)/$(IOCNAME)/iocInfo/asyn$$INDEX.log")
-asynSetTraceMask("bus$$INDEX", 0, 0x1f) # log everything
-asynSetTraceIOMask("bus$$INDEX", 0, 0x6)
-$$ELSE(ASYNTRACE)
-asynSetTraceMask("bus$$INDEX", 0, 0x1) # logging for normal operation
-$$ENDIF(ASYNTRACE)
-#$$ENDLOOP(ROBOT)
 
 # Load record instances
 #dbLoadRecords( "db/iocSoft.db",             "IOC=$(IOC_PV)" )
 #dbLoadRecords( "db/save_restoreStatus.db",  "IOC=$(IOC_PV)" )
 
-# Load robot control
-#$$LOOP(ROBOT)
+
 dbLoadRecords("db/ADVisar.db",       "NAME=$$NAME,bus=bus$$INDEX,IOC_PV=$(IOC_PV)")
-#dbLoadRecords("db/staubli_mov.db",   "NAME=$$NAME,bus=bus$$INDEX")
-#dbLoadRecords("db/staubli_abs_base.db",   "NAME=$$NAME,bus=bus$$INDEX")
-#dbLoadRecords("db/staubli_abs_axes.db",   "NAME=$$NAME,bus=bus$$INDEX")
-#dbLoadRecords("db/staubli_coords_base.db",   "NAME=$$NAME,bus=bus$$INDEX")
-#dbLoadRecords("db/staubli_coord_ch.db",   "NAME=$$NAME,bus=bus$$INDEX")
-#dbLoadRecords("db/staubli_world.db",   "NAME=$$NAME")
-#dbLoadRecords("db/staubli_joints.db",   "NAME=$$NAME")
-#$$ENDLOOP(ROBOT)
+
 
 # Setup autosave
 #set_savefile_path( "$(IOC_DATA)/$(IOCNAME)/autosave" )
