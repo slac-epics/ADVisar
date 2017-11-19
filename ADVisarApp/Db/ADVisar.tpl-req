@@ -1,4 +1,0 @@
-# ADVisar autosave template file
-
-file "ADBase_settings.req", P=$(P), R=$(R)
-
