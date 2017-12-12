@@ -14,7 +14,29 @@
 #include <epicsString.h>
 #include <epicsExit.h>
 
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <math.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+
+#include <epicsTime.h>
+#include <epicsThread.h>
+#include <epicsEndian.h>
+#include <epicsEvent.h>
+#include <epicsMutex.h>
+#include <epicsString.h>
+#include <epicsStdio.h>
+#include <epicsMutex.h>
+#include <cantProceed.h>
+#include <iocsh.h>
+
+#include <asynOctetSyncIO.h>
+
 #include "ADDriver.h"
+#include "NDPluginDriver.h"
 
 #include <epicsExport.h>
 
@@ -29,7 +51,7 @@
 #define SIZE_Y 1024
 #define BPP 4
 
-#define NUM_SD_PARAMS  10 //??????????????????
+#define NUM_SD_PARAMS  100 //??????????????????
 
 
 
@@ -39,7 +61,7 @@ class visarCamera : public ADDriver
 {
 public:
 
-    visarCamera(const char *portName, int cameraId, int traceMask, int memoryChannel,
+    visarCamera(const char *portName, const char *IPPortName,
                 int maxBuffers, size_t maxMemory,
                 int priority, int stackSize);
 
@@ -49,7 +71,7 @@ public:
   //  virtual asynStatus writeFloat64( asynUser *pasynUser, epicsFloat64 value);
   //  virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],size_t nElements, size_t *nIn);
 
-  //  void report(FILE *fp, int details);
+  virtual  void report(FILE *fp, int details);
 
 
 
@@ -75,6 +97,14 @@ private:
     char inString_[MAX_IN_COMMAND_LEN];
     char rawFrame_[SIZE_X*SIZE_Y*BPP];
 
+    epicsEventId startEventId_;
+
+    int acquiring_;
+    int exiting_;
+
+    NDArray *pRaw_;
+
+
 
     /* Local methods to this class */
 
@@ -89,21 +119,17 @@ private:
     asynStatus getRawFrame();
 
 
-    int exiting_;
-
-    NDArray *pRaw_;
-
-
-    epicsEventId startEventId_;
-
-
 };
 
 
 // Links to C
-extern "C" int visarCameraConfig(const char *portName, int cameraId, int traceMask, int memoryChannel,int maxBuffers, size_t maxMemory, int priority, int stackSize){
-    new visarCamera( portName, cameraId, traceMask, memoryChannel, maxBuffers, maxMemory, priority, stackSize);
-    return asynSuccess;
+extern "C" int visarCameraConfig(const char *portName, const char *IPPortName,
+                            int maxBuffers, size_t maxMemory,
+                            int priority, int stackSize)
+{
+    new visarCamera(portName, IPPortName,
+               maxBuffers, maxMemory, priority, stackSize);
+    return(asynSuccess);
 }
 
 static void c_shutdown(void *arg){
@@ -120,7 +146,8 @@ static void imageGrabTaskC(void *drvPvt){
 
 
 // Constructor
-visarCamera::visarCamera(const char *portName, int cameraId, int traceMask, int memoryChannel, int maxBuffers,size_t maxMemory, int priority, int stackSize)
+visarCamera::visarCamera(const char *portName, const char *IPPortName,
+                         int maxBuffers,size_t maxMemory, int priority, int stackSize)
         : ADDriver(portName, 1, NUM_SD_PARAMS, maxBuffers, maxMemory,0, 0,ASYN_CANBLOCK | ASYN_MULTIDEVICE, 1, priority, stackSize),
 
           exiting_(0),
@@ -128,7 +155,8 @@ visarCamera::visarCamera(const char *portName, int cameraId, int traceMask, int 
 {
 
     static const char *functionName = "visarCamera";
-    asynStatus status;
+
+    asynStatus status = asynSuccess;
 
 
     const char *IPPortName = "localhost";
