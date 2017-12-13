@@ -1,0 +1,20 @@
+#==============================================================================
+#RELEASE Location of external products
+# Run "gnumake clean uninstall install" in the application
+# top directory each time this file is changed.
+
+#==============================================================================
+# Define the top of the EPICS tree for your site.
+# We will build some tools/scripts that allow us to
+# change this easily when relocating software.
+#==============================================================================
+BASE_MODULE_VERSION=R3.14.12-0.4.0
+EPICS_SITE_TOP=/reg/g/pcds/package/epics/3.14
+BASE_SITE_TOP=/reg/g/pcds/package/epics/3.14/base
+MODULES_SITE_TOP=/reg/g/pcds/package/epics/3.14/R3.14.12-0.4.0/modules
+EPICS_MODULES=/reg/g/pcds/package/epics/3.14/R3.14.12-0.4.0/modules
+EPICS_BASE_VER=R3.14.12-0.4.0
+PACKAGE_SITE_TOP=/reg/g/pcds/package
+TOOLS_SITE_TOP=/afs/slac.stanford.edu/g/lcls/tools
+ALARM_CONFIGS_TOP=/afs/slac.stanford.edu/g/lcls/tools/AlarmConfigsTop
+#==============================================================================

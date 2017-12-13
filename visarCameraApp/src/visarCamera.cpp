@@ -53,6 +53,8 @@
 
 #define NUM_SD_PARAMS  100 //??????????????????
 
+#define M1K_TIMEOUT 10 //?????????/
+
 
 
 static const char *driverName = "visarCamera";
@@ -89,6 +91,7 @@ private:
 
     const char *controlPortName_ ;
     const char *dataPortName_;
+    char *IPPortName_;
 
     asynUser *pasynUserControl_;
     asynUser *pasynUserData_;
@@ -159,8 +162,9 @@ visarCamera::visarCamera(const char *portName, const char *IPPortName,
     asynStatus status = asynSuccess;
 
 
-    const char *IPPortName = "localhost";
-    IPPortName_ = epicsStrDup(IPPortName);
+
+    const char *IPPortName2 = "localhost";
+    IPPortName_ = epicsStrDup(IPPortName2);
 
 
 
@@ -195,19 +199,21 @@ visarCamera::visarCamera(const char *portName, const char *IPPortName,
 
 asynStatus visarCamera::connectCamera(void) {
 
+    static const char *functionName = "visarCamera::connectCamera";
+
     asynStatus status;
 
     status = pasynOctetSyncIO->connect(controlPortName_, 0, &pasynUserControl_, NULL);
     if (status) {
         printf("%s:%s: error calling pasynOctetSyncIO->connect for control socket, status=%d, error=%s\n",
-               driverName, functionName, status, pasynUserMeter_->errorMessage);
+               driverName, functionName, status, pasynUserControl_->errorMessage);
         return status;
     }
 
     status = pasynOctetSyncIO->connect(dataPortName_, 0, &pasynUserData_, NULL);
     if (status) {
         printf("%s:%s: error calling pasynOctetSyncIO->connect for data socket, status=%d, error=%s\n",
-               driverName, functionName, status, pasynUserMeter_->errorMessage);
+               driverName, functionName, status, pasynUserData_->errorMessage);
         return status;
     }
 
@@ -249,7 +255,7 @@ asynStatus visarCamera::startCapture() {
 }
 
 asynStatus visarCamera::stopCapture(){
-    Error error;
+
     static const char *functionName = "stopCapture";
 
     size_t nread;
@@ -268,9 +274,9 @@ asynStatus visarCamera::stopCapture(){
 
 void visarCamera::shutdown(void){
     exiting_ = 1;
-    if (pGuid_) {
+  //  if (pGuid_) {
         disconnectCamera();
-    }
+  //  }
 }
 
 
@@ -371,15 +377,11 @@ void visarCamera::imageGrabTask() {
 
 asynStatus visarCamera::grabImage() {
         asynStatus status = asynSuccess;
-        Error error;
+
         unsigned int nRows, nCols, stride;
-        PixelFormat pixelFormat;
-        BayerTileFormat bayerFormat;
+
         NDDataType_t dataType;
         NDColorMode_t colorMode;
-        Image *pPGImage;
-        ImageMetadata metaData;
-        TimeStamp timeStamp;
         int convertPixelFormat;
         int numColors;
         size_t dims[3];
@@ -404,10 +406,10 @@ asynStatus visarCamera::grabImage() {
         lock();
 
         // Calculate bandwidth
-        dataSizePG = pPGRawImage_->GetReceivedDataSize();
-        getDoubleParam(FRAME_RATE, PGPropertyValueAbs, &frameRate);
-        bandwidth = frameRate * dataSizePG / (1024 * 1024);
-        setDoubleParam(PGBandwidth, bandwidth);
+       // dataSizePG = pPGRawImage_->GetReceivedDataSize();
+    //    getDoubleParam(FRAME_RATE, PGPropertyValueAbs, &frameRate);
+  //      bandwidth = frameRate * dataSizePG / (1024 * 1024);
+ //       setDoubleParam(PGBandwidth, bandwidth);
 
 
         // arranjar a imagem
@@ -416,18 +418,18 @@ asynStatus visarCamera::grabImage() {
         // por as coisas no NDArray
 
 
-        setIntegerParam(NDArraySizeX, nCols);
-        setIntegerParam(NDArraySizeY, nRows);
-        setIntegerParam(NDArraySize, (int)dataSize);
-        setIntegerParam(NDDataType,dataType);
-        if (nDims == 3) {
-            colorMode = NDColorModeRGB1;
-        } else {
-            /* If the color mode is currently set to Bayer leave it alone */
-            getIntegerParam(NDColorMode, (int *)&colorMode);
-            if (colorMode != NDColorModeBayer) colorMode = NDColorModeMono;
-        }
-        setIntegerParam(NDColorMode, colorMode);
+   //     setIntegerParam(NDArraySizeX, nCols);
+   //     setIntegerParam(NDArraySizeY, nRows);
+   //     setIntegerParam(NDArraySize, (int)dataSize);
+   //     setIntegerParam(NDDataType,dataType);
+   //     if (nDims == 3) {
+   //         colorMode = NDColorModeRGB1;
+   //     } else {
+   //         /* If the color mode is currently set to Bayer leave it alone */
+   //         getIntegerParam(NDColorMode, (int *)&colorMode);
+   //         if (colorMode != NDColorModeBayer) colorMode = NDColorModeMono;
+   //     }
+   //     setIntegerParam(NDColorMode, colorMode);
 
 
         pRaw_ = pNDArrayPool->alloc(nDims, dims, dataType, 0, NULL);
@@ -445,33 +447,33 @@ asynStatus visarCamera::grabImage() {
         }
 
         // copia a imagem para o buffer do NDArrayPool
-        pData = pPGImage->GetData();
-        memcpy(pRaw_->pData, pData, dataSize);
+    //    pData = pPGImage->GetData();
+    //    memcpy(pRaw_->pData, pData, dataSize);
 
         /* Put the frame number into the buffer */
-        pRaw_->uniqueId = metaData.embeddedFrameCounter;
-        getIntegerParam(PGTimeStampMode, &timeStampMode);
-        updateTimeStamp(&pRaw_->epicsTS);
+  //      pRaw_->uniqueId = metaData.embeddedFrameCounter;
+   //     getIntegerParam(PGTimeStampMode, &timeStampMode);
+ //       updateTimeStamp(&pRaw_->epicsTS);
 
         /* Set the timestamps in the buffer */
         switch (timeStampMode) {
-            case TimeStampCamera:
+       //     case TimeStampCamera:
                 // Some Point Grey cameras return seconds and microseconds, others cycleSeconds, etc. fields
-                if (timeStamp.seconds != 0) {
-                    pRaw_->timeStamp = (double)timeStamp.seconds +
-                                       (double)timeStamp.microSeconds / 1.e6;
-                } else {
-                    pRaw_->timeStamp = (double)timeStamp.cycleSeconds +
-                                       (double)timeStamp.cycleCount / 8000. +
-                                       (double)timeStamp.cycleOffset / 8000. / 3072.;
-                }
-                break;
-            case TimeStampEPICS:
-                pRaw_->timeStamp = pRaw_->epicsTS.secPastEpoch + pRaw_->epicsTS.nsec/1e9;
-                break;
-            case TimeStampHybrid:
+        //        if (timeStamp.seconds != 0) {
+        //            pRaw_->timeStamp = (double)timeStamp.seconds +
+       //                                (double)timeStamp.microSeconds / 1.e6;
+        //        } else {
+        //            pRaw_->timeStamp = (double)timeStamp.cycleSeconds +
+         //                              (double)timeStamp.cycleCount / 8000. +
+         //                              (double)timeStamp.cycleOffset / 8000. / 3072.;
+        //        }
+//                break;
+       //     case TimeStampEPICS:
+      //          pRaw_->timeStamp = pRaw_->epicsTS.secPastEpoch + pRaw_->epicsTS.nsec/1e9;
+     //           break;
+    //        case TimeStampHybrid:
                 // For now we just use EPICS time
-                pRaw_->timeStamp = pRaw_->epicsTS.secPastEpoch + pRaw_->epicsTS.nsec/1e9;
+    //            pRaw_->timeStamp = pRaw_->epicsTS.secPastEpoch + pRaw_->epicsTS.nsec/1e9;
                 break;
         }
 
@@ -492,6 +494,9 @@ asynStatus visarCamera::grabImage() {
 }
 
 asynStatus visarCamera::waitForFrame(void) {
+
+    asynStatus status;
+
 
     // Wait for           4,LiveMonitor,notifytimestamp,timestamp
 
@@ -519,7 +524,7 @@ asynStatus visarCamera::getRawFrame(void) {
     if(status != asynSuccess)
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,"%s:%s: error!\n",driverName, functionName);
 
-    strcpy(frame_,inString_);
+    strcpy(rawFrame_,inString_);
 
     return status;
 
@@ -530,23 +535,23 @@ asynStatus visarCamera::getRawFrame(void) {
 
 
 
-/** Send a string to the detector and reads the response.**/
-asynStatus mythen::writeReadControl()
-{
-    const char *functionName="writeReadMeter";
-
-    size_t read_buffer_len = sizeof(epicsFloat32);
-
-    size_t nread;
-    size_t nwrite;
-    asynStatus status;
-    int eomReason;
-
-    status = pasynOctetSyncIO->writeRead(pasynUserControl_, outString_, strlen(outString_),inString_,read_buffer_len , M1K_TIMEOUT, &nwrite, &nread, &eomReason);
-
-    if(status != asynSuccess)
-        asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                  "%s:%s: error!\n",driverName, functionName);
-    return status;
-}
+///** Send a string to the detector and reads the response.**/
+//asynStatus mythen::writeReadControl()
+//{
+//    const char *functionName="writeReadMeter";
+//
+//    size_t read_buffer_len = sizeof(epicsFloat32);
+//
+//    size_t nread;
+//    size_t nwrite;
+//    asynStatus status;
+//    int eomReason;
+//
+//    status = pasynOctetSyncIO->writeRead(pasynUserControl_, outString_, strlen(outString_),inString_,read_buffer_len , M1K_TIMEOUT, &nwrite, &nread, &eomReason);
+//
+//    if(status != asynSuccess)
+//        asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
+//                  "%s:%s: error!\n",driverName, functionName);
+//    return status;
+//}
 

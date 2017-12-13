@@ -3,8 +3,7 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-LIBRARY_IOC_WIN32 += visarCamera
-LIBRARY_IOC_Linux += visarCamera
+LIBRARY_IOC += visarCamera
 
 LIB_SRCS += visarCamera.cpp
 
