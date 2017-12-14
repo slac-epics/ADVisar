@@ -67,13 +67,16 @@ public:
                 int maxBuffers, size_t maxMemory,
                 int priority, int stackSize);
 
+    virtual ~visarCamera(){};
 
 
-  //  virtual asynStatus writeInt32( asynUser *pasynUser, epicsInt32 value);
-  //  virtual asynStatus writeFloat64( asynUser *pasynUser, epicsFloat64 value);
-  //  virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],size_t nElements, size_t *nIn);
 
-  virtual  void report(FILE *fp, int details);
+    virtual asynStatus writeInt32( asynUser *pasynUser, epicsInt32 value);
+//    virtual asynStatus writeFloat64( asynUser *pasynUser, epicsFloat64 value){};
+//    virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],size_t nElements, size_t *nIn);
+
+    virtual  void report(FILE *fp, int details);
+//    virtual void setShutter(int open);
 
 
 
@@ -144,6 +147,33 @@ static void imageGrabTaskC(void *drvPvt){
     visarCamera *pPvt = (visarCamera *)drvPvt;
 
     pPvt->imageGrabTask();
+}
+
+
+
+asynStatus visarCamera::writeInt32(asynUser *pasynUser, epicsInt32 value) {
+    return (asynSuccess);
+}
+
+/** Report status of the driver.
+  * Prints details about the driver if details>0.
+  * It then calls the ADDriver::report() method.
+  * \param[in] fp File pointed passed by caller where the output is written to.
+  * \param[in] details If >0 then driver details are printed.
+  */
+void visarCamera::report(FILE *fp, int details)
+{
+    fprintf(fp, "visarCamera %s\n", this->portName);
+    if (details > 0) {
+        int nx, ny, dataType;
+        getIntegerParam(ADSizeX, &nx);
+        getIntegerParam(ADSizeY, &ny);
+        getIntegerParam(NDDataType, &dataType);
+        fprintf(fp, "  NX, NY:            %d  %d\n", nx, ny);
+        fprintf(fp, "  Data type:         %d\n", dataType);
+    }
+    /* Invoke the base class method */
+    ADDriver::report(fp, details);
 }
 
 
@@ -475,7 +505,7 @@ asynStatus visarCamera::grabImage() {
     //        case TimeStampHybrid:
                 // For now we just use EPICS time
     //            pRaw_->timeStamp = pRaw_->epicsTS.secPastEpoch + pRaw_->epicsTS.nsec/1e9;
-                break;
+//                break;
         }
 
 
@@ -531,6 +561,43 @@ asynStatus visarCamera::getRawFrame(void) {
 
 
 }
+
+
+/* Code for iocsh registration */
+
+static const iocshArg visarCameraConfigArg0 = {"Port name", iocshArgString};
+static const iocshArg visarCameraConfigArg1 = {"Control asyn port name", iocshArgString};
+static const iocshArg visarCameraConfigArg2 = {"Data asyn port name", iocshArgString};
+static const iocshArg visarCameraConfigArg3 = {"maxBuffers", iocshArgInt};
+static const iocshArg visarCameraConfigArg4 = {"maxMemory", iocshArgInt};
+static const iocshArg visarCameraConfigArg5 = {"priority", iocshArgInt};
+static const iocshArg visarCameraConfigArg6 = {"stackSize", iocshArgInt};
+static const iocshArg * const visarCameraConfigArgs[] =  {&visarCameraConfigArg0,
+                                                     &visarCameraConfigArg1,
+                                                     &visarCameraConfigArg2,
+                                                     &visarCameraConfigArg3,
+                                                     &visarCameraConfigArg4,
+                                                     &visarCameraConfigArg5,
+                                                     &visarCameraConfigArg6,};
+
+
+static const iocshFuncDef configvisarcamera = {"visarCameraConfig", 7, visarCameraConfigArgs};
+static void configvisarcameraCallFunc(const iocshArgBuf *args)
+{
+    visarCameraConfig(args[0].sval, args[1].sval, args[2].sval,
+                 args[3].ival, args[4].ival,  args[5].ival ,args[6].ival);
+}
+
+static void visarCameraRegister(void)
+{
+
+    iocshRegister(&configvisarcamera, configvisarcameraCallFunc);
+}
+
+extern "C" {
+epicsExportRegistrar(visarCameraRegister);
+}
+
 
 
 
