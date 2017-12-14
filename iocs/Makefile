@@ -22,4 +22,3 @@ $(1)$(DIVIDER)realuninstall:
 endef
 $(foreach dir, $(DIRS), $(eval $(call REALUNINSTALL_template,$(dir))))
 .PHONY: realuninstall $(realuninstallTargets)
-

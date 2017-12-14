@@ -63,7 +63,7 @@ class visarCamera : public ADDriver
 {
 public:
 
-    visarCamera(const char *portName, const char *IPPortName,
+    visarCamera(const char *portName, const char *controlPortName, const char *dataPortName,
                 int maxBuffers, size_t maxMemory,
                 int priority, int stackSize);
 
@@ -91,7 +91,6 @@ private:
 
     const char *controlPortName_ ;
     const char *dataPortName_;
-    char *IPPortName_;
 
     asynUser *pasynUserControl_;
     asynUser *pasynUserData_;
@@ -126,11 +125,12 @@ private:
 
 
 // Links to C
-extern "C" int visarCameraConfig(const char *portName, const char *IPPortName,
+extern "C" int visarCameraConfig(const char *portName, const char *controlPortName, const char *dataPortName,
                             int maxBuffers, size_t maxMemory,
                             int priority, int stackSize)
+
 {
-    new visarCamera(portName, IPPortName,
+    new visarCamera(portName, controlPortName,dataPortName,
                maxBuffers, maxMemory, priority, stackSize);
     return(asynSuccess);
 }
@@ -149,8 +149,9 @@ static void imageGrabTaskC(void *drvPvt){
 
 
 // Constructor
-visarCamera::visarCamera(const char *portName, const char *IPPortName,
+visarCamera::visarCamera(const char *portName, const char *controlPortName, const char *dataPortName,
                          int maxBuffers,size_t maxMemory, int priority, int stackSize)
+
         : ADDriver(portName, 1, NUM_SD_PARAMS, maxBuffers, maxMemory,0, 0,ASYN_CANBLOCK | ASYN_MULTIDEVICE, 1, priority, stackSize),
 
           exiting_(0),
@@ -163,15 +164,15 @@ visarCamera::visarCamera(const char *portName, const char *IPPortName,
 
 
 
-    const char *IPPortName2 = "localhost";
-    IPPortName_ = epicsStrDup(IPPortName2);
+    controlPortName_ = epicsStrDup(controlPortName);
+    dataPortName_ = epicsStrDup(dataPortName);
 
 
 
     /* Create the epicsEvents for signaling to the mythen task when acquisition starts and stops */
     startEventId_ = epicsEventCreate(epicsEventEmpty);
     if (!this->startEventId_) {
-        printf("%s:%s epicsEventCreate failure for start event\n",
+        printf("%s:%s epicsEventCreate failure for run event\n",
                driverName, functionName);
         return;
     }
@@ -304,9 +305,9 @@ void visarCamera::imageGrabTask() {
             callParamCallbacks();                       // what is this?
 
             /* Wait for a signal that tells this thread that the transmission
-             * has started and we can start asking for image buffers...     */
+             * has started and we can run asking for image buffers...     */
             asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
-                      "%s::%s waiting for acquire to start\n",
+                      "%s::%s waiting for acquire to run\n",
                       driverName, functionName);
             /* Release the lock while we wait for an event that says acquire has started, then lock again */
             unlock();

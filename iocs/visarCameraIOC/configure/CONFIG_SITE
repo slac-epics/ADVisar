@@ -16,9 +16,6 @@
 #   continue building anyway if conflicts are found.
 CHECK_RELEASE = YES
 
-# Uncomment to build test IOC Application located in $TOP/iocs
-BUILD_IOCS = YES
-
 # Set this when you only want to compile this application
 #   for a subset of the cross-compiled target architectures
 #   that Base is built for.
@@ -43,9 +40,3 @@ ifdef T_A
   -include $(AREA_DETECTOR)/configure/CONFIG_SITE.Common.$(T_A)
   -include $(AREA_DETECTOR)/configure/CONFIG_SITE.$(EPICS_HOST_ARCH).$(T_A)
 endif
-
-# These allow developers to override the CONFIG_SITE variable
-# settings without having to modify the configure/CONFIG_SITE
-# file itself.
--include $(TOP)/../CONFIG_SITE.local
--include $(TOP)/configure/CONFIG_SITE.local
