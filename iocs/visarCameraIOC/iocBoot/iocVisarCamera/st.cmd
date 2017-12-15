@@ -1,14 +1,20 @@
 < envPaths
 
-epicsEnvSet( "ENGINEER" , "$$ENGINEER" )
-epicsEnvSet( "IOCSH_PS1", "$$IOCNAME>" )
-epicsEnvSet( "IOCENAME", "$$TRANSLATE(IOCNAME,"a-z_-","A-Z::")" )
-epicsEnvSet( "IOCPVROOT", "$$IF(IOCPVROOT,$$IOCPVROOT,$(IOCENAME)")
-epicsEnvSet( "LOCATION",  "$$IF(LOCATION,$$LOCATION,$$IOCPVROOT)")
-epicsEnvSet( "IP",        "$$IP"       )
-epicsEnvSet( "IP_PORT1",	  "$$IP_PORT1"     )
-epicsEnvSet( "IP_PORT2",	  "$$IP_PORT2"     )
-epicsEnvSet( "BASE_NAME", "$$NAME"     )
+
+ENGINEER=joaoprod
+NAME=MEC:VISAR:01
+LOCATION=MEC:VISAR:IOC:01
+IP=172.21.46.71
+IP_PORT1=1001
+IP_PORT2=1002
+IOCPVROOT=MEC:VISAR:IOC:01
+
+
+
+epicsEnvSet( "IP",        "172.21.46.71"       )
+epicsEnvSet( "IP_PORT1",	  "1001"     )
+epicsEnvSet( "IP_PORT2",	  "1002"     )
+epicsEnvSet( "BASE_NAME", "MEC:VISAR:01"     )
 epicsEnvSet( "IOCTOP",    "$$IOCTOP"   )
 epicsEnvSet( "TOP",       "$$TOP"      )
 epicsEnvSet("STREAM_PROTOCOL_PATH", "$(IOCTOP)/protocol")

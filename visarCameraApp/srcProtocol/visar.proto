@@ -1,0 +1,191 @@
+#All commands are case insensitive.
+#Commands have the general form:
+#     COMMAND(OPTIONAL,COMMA,SEPARATED,PARAMETER,LIST)\r
+#Responses have the general form:
+#     CODE,COMMAND,OPTIONAL,COMMA,SEPARATED,RESPONSE,VALUES\r
+
+
+InTerminator  = CR;
+OutTerminator = CR;
+ReplyTimeout  =  2000;
+ReadTimeout   =  100;
+WriteTimeout  =  100;
+ExtraInput    = Ignore;
+
+app_info{
+	out "AppInfo(Version)";
+	in  "0,AppInfo,%40c";
+#	@mismatch { "%(\$1ErrorCode)d,CamParamSet,"%(\$1AppStatus)d;}
+}
+
+
+
+# Parameters
+############################
+
+# Exposure / AD AcquireTime in ns
+############################
+set_exposure_time{
+	out "CamParamSet(Live,Exposure,%.6f %(\$1AcquireTimeUnits)s)";
+	in  "0,CamParamSet";
+	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
+}
+get_exposure_time{
+	out "CamParamGet(Live,Exposure)";
+	in  "0,CamParamGet,%f %(\$1AcquireTimeUnits_RBV)s";
+	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
+}
+
+
+# II Gain / AD Gain
+set_II_gain{
+	out "DevParamSet(TD,II-Gain,%d)";
+	in  "0,DevParamSet";
+#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+}
+
+get_II_gain{
+	out "DevParamGet(TD,II-Gain)";
+	in  "0,DevParamGet,%d";
+#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+}
+
+
+
+set_mode{
+	out "DevParamSet(TD,Mode,%{Focus|Operate})";
+	in "0,DevParamSet";
+#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+}
+get_mode{
+	out "DevParamGet(TD,Mode)";
+	in "0,DevParamGet,%{Focus|Operate}";
+#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet,%{Focus|Operate}";}
+}
+
+
+set_gate_mode{
+	out "DevParamSet(TD,Gate Mode,%{Normal|Gate|Open Fixed})";
+	in "0,DevParamSet";
+#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+
+}
+get_gate_mode{
+	out "DevParamGet(TD,Gate Mode)";
+	in "0,DevParamGet,%{Normal|Gate|Open Fixed}";
+#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet,%{Normal|Gate|Open Fixed}";}
+}
+
+
+set_shutter{
+	out "DevParamSet(TD,Shutter,%{Closed|Open})";
+	in "0,DevParamSet";
+#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+}
+get_shutter{
+	out "DevParamGet(TD,Shutter)";
+	in "0,DevParamGet,%{Closed|Open}";
+#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+}
+
+set_trigger_mode{
+	out "DevParamSet(TD,Trig. Mode,%{Single|Cont})";
+	in "0,DevParamSet";
+#	@mismatch { in  "%(\$1ErrorCode)d,CamParamSet";}
+}
+get_trigger_mode{
+	out "DevParamGet(TD,Trig. Mode)";
+	in "0,DevParamGet,%{Single|Cont}";
+#	@mismatch { in  "%(\$1ErrorCode)d,CamParamGet,%{Single|Cont}";}
+}
+
+set_trigger_status{
+	out "DevParamSet(TD,Trigger status,%{Ready|Fired|Do Reset})";
+	in "0,DevParamSet";
+#	@mismatch { in "%(\$1ErrorCode)d,CamParamGet,%{Ready|Fired|Do Reset}"; }
+}
+
+get_trigger_status{
+	out "DevParamGet(TD,Trigger status)";
+	in "0,DevParamGet,%{Ready|Fired|Do Reset}";
+#	@mismatch { in "%(\$1ErrorCode)d,CamParamGet,%{Ready|Fired|Do Reset}"; }
+}
+
+
+set_focus_time_over{
+	out "DevParamSet(TD,FocusTimeOver,%d)";
+	in "0,DevParamSet";
+#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+}
+
+get_focus_time_over{
+	out "DevParamGet(TD,FocusTimeOver)";
+	in "0,DevParamGet,%d";
+#	@mismatch { in  "%(\$1ErrorCode)d";}
+}
+
+get_model{
+	out "MainParamGet(StreakCamera)";
+	in  "0,MainParamGet,%40c";
+#	@mismatch { in  "%(\$1ErrorCode)d,MainParamGet";}
+}
+
+
+set_time_range{
+	out "DevParamSet(TD,Time Range,%{0.5 ns|1 ns|2 ns|5 ns|10 ns|20 ns|50 ns|100 ns|200 ns|500 ns|1 us|2 us|5 us|10 us|20 us|50 us})";
+	in "0,DevParamSet";
+#	@mismatch { in  "%(\$1ErrorCode)d,CamParamSet";}
+}
+get_time_range{
+	out "DevParamGet(TD,Time Range)";
+	in "0,DevParamGet,%{0.5 ns|1 ns|2 ns|5 ns|10 ns|20 ns|50 ns|100 ns|200 ns|500 ns|1 us|2 us|5 us|10 us|20 us|50 us}";
+#	@mismatch { in  "%(\$1ErrorCode)d,CamParamGet";}
+}
+
+
+
+#####
+
+remote_ready {
+	in "RemoteEx Ready";
+}
+
+remote_data_ready {
+	in "RemoteEx Data Ready";
+}
+
+
+app_start{
+	out "AppStart()";
+	in "0,AppStart";
+}
+
+app_end{
+	out "AppEnd()";
+	in "0,AppEnd";
+}
+
+
+app_version{
+	out "AppInfo(Version)";
+	in "0,AppInfo,%40c";
+}
+
+acq_start{
+	out "AcqStart(Live)";
+	in "0,AcqStart";
+}
+
+acq_stop{
+	out "AcqStop()";
+	in "0,AcqStop";
+}
+
+
+
+
+
+
+
+
+
