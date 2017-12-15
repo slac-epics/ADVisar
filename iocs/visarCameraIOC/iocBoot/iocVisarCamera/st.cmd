@@ -17,7 +17,7 @@ epicsEnvSet( "IP_PORT2",	  "1002"     )
 epicsEnvSet( "BASE_NAME", "MEC:VISAR:01"     )
 epicsEnvSet( "IOCTOP",    "$$IOCTOP"   )
 epicsEnvSet( "TOP",       "$$TOP"      )
-epicsEnvSet("STREAM_PROTOCOL_PATH", "$(IOCTOP)/protocol")
+epicsEnvSet("STREAM_PROTOCOL_PATH", "$(TOP)/protocol")
 
 
 
