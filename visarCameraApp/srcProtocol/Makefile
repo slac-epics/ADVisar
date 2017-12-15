@@ -9,6 +9,8 @@ include $(TOP)/configure/CONFIG
 COPY_FILES += visar.proto
 COPY_SUBDIR = $(TOP)/protocol
 
+DB_INSTALLS += visar.proto
+
 include $(TOP)/configure/RULES
 include $(TOP)/configure/RULES.copy
 #----------------------------------------
