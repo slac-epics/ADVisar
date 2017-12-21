@@ -102,18 +102,19 @@ record(calc, "$(P)$(R)AcquireTimeCalc_RBV") {
   field(INPB, "$(P)$(R)AcquireTimeVisarUnits_RBV CPP MS")
   field(CALC, "(B==0)? A*0.000001 : (B==1)? A*0.001: (B==2)? A: (B==3)? A*60 : -1")
   field( PREC, "6" )
- # field(FLNK, "$(P)$(R)AcquireTime_RBV")
+  field(FLNK, "$(P)$(R)AcquireTime_RBV")
   field(EGU, "sec")
 }
 
 
 record(ai, "$(P)$(R)AcquireTime_RBV") {
+  field(DTYP, "Soft Channel" )
   field(DESC, "Exposure time")
-  field(INP, "$(P)$(R)AcquireTimeCalc_RBV.VAL")   ## NAO FUNCIONA ESTA MERDA
-#  field(VAL, "4")
+  field(INP, "$(P)$(R)AcquireTimeCalc_RBV PP")   ## NAO FUNCIONA ESTA MERDA
  # field(SCAN, "1 second")
+  field(FLNK, "$(P)$(R)AcquireTimeCalc_RBV PP")
   field(PINI, "YES")
-  field(EGU, "s")
+  field(EGU, "sec")
 }
 
 
@@ -122,7 +123,7 @@ record(ao, "$(P)$(R)AcquireTime") {
   field(DTYP, "stream")
   field(OUT, "@visar.proto set_exposure_time_s($(P)$(R)) $(PORTC) 0")
   field(FLNK, "$(P)$(R)AcquireTime_RBV")
-  field(EGU, "s")
+  field(EGU, "sec")
 }
 
 
