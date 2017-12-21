@@ -6,7 +6,7 @@
 #	EPICS_MODULES
 # from one of the following options
 -include $(TOP)/../../../../RELEASE_SITE
--include $(TOP)/../../RELEASE_SITE
+include $(TOP)/../../RELEASE_SITE
 -include $(TOP)/RELEASE_SITE
 
 # Check that EPICS_MODULES was defined in a RELEASE_SITE file
@@ -22,7 +22,9 @@
 # ==========================================================
 ADCORE_MODULE_VERSION = R2.6-2.2.0
 ASYN_MODULE_VERSION = R4.31-1.0.0
-STREAMDEVICE_MODULE_VERSION=R2.7.7-1.0
+STREAMDEVICE_MODULE_VERSION=R2.6-0.1.8
+BUSY_MODULE_VERSION				    = R1.6.1-0.2.5
+CALC_MODULE_VERSION					= R3.2-0.4.0
 
 # ==========================================================
 # Define module paths using pattern
@@ -33,6 +35,9 @@ STREAMDEVICE_MODULE_VERSION=R2.7.7-1.0
 ADCORE = $(EPICS_MODULES)/ADCore/$(ADCORE_MODULE_VERSION)
 ASYN = $(EPICS_MODULES)/asyn/$(ASYN_MODULE_VERSION)
 STREAMDEVICE=$(EPICS_MODULES)/streamdevice/$(STREAMDEVICE_MODULE_VERSION)
+BUSY			= $(EPICS_MODULES)/busy/$(BUSY_MODULE_VERSION)
+CALC			= $(EPICS_MODULES)/calc/$(CALC_MODULE_VERSION)
+ADVISARCAMERA = $(TOP)/../..
 
 
 # Set EPICS_BASE last so it appears last in the DB, DBD, INCLUDE, and LIB search paths

@@ -27,14 +27,21 @@ app_info{
 # Exposure / AD AcquireTime in ns
 ############################
 set_exposure_time{
-	out "CamParamSet(Live,Exposure,%.6f %(\$1AcquireTimeUnits)s)";
+	out "CamParamSet(Live,Exposure,%.6f %(\$1AcquireTimeVisarUnits){us|ms|s|min})";
 	in  "0,CamParamSet";
-	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
+#	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
 }
+
+set_exposure_time_s{
+	out "CamParamSet(Live,Exposure,%.6f s)";
+	in  "0,CamParamSet";
+#	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
+}
+
 get_exposure_time{
 	out "CamParamGet(Live,Exposure)";
-	in  "0,CamParamGet,%f %(\$1AcquireTimeUnits_RBV)s";
-	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
+	in  "0,CamParamGet,%f %(\$1AcquireTimeVisarUnits_RBV){us|ms|s|m}";
+#	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
 }
 
 
@@ -90,13 +97,13 @@ get_shutter{
 }
 
 set_trigger_mode{
-	out "DevParamSet(TD,Trig. Mode,%{Single|Cont})";
+	out "DevParamSet(TD,Trig. Mode,%{Single|Cont|xx})";
 	in "0,DevParamSet";
 #	@mismatch { in  "%(\$1ErrorCode)d,CamParamSet";}
 }
 get_trigger_mode{
 	out "DevParamGet(TD,Trig. Mode)";
-	in "0,DevParamGet,%{Single|Cont}";
+	in "0,DevParamGet,%{Single|Cont|xx}";
 #	@mismatch { in  "%(\$1ErrorCode)d,CamParamGet,%{Single|Cont}";}
 }
 

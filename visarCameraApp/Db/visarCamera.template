@@ -48,35 +48,87 @@ record( longin, "$(P)$(R)BitsPerPixel_RBV")
 	field(SCAN, "Passive")
 }
 
-record(stringin, "$(P)$(R)AcquireTimeUnits_RBV") {
+record(mbbi, "$(P)$(R)AcquireTimeVisarUnits_RBV") {
   field(DESC, "Exposure time units")
+  field(ZRST, "us")
+  field(ZRVL, "0")
+  field(ONST, "ms")
+  field(ONVL, "1")
+  field(TWST, "s")
+  field(TWVL, "2")
+  field(THST, "min")
+  field(THVL, "3")
 }
 
-record(stringout, "$(P)$(R)AcquireTimeUnits") {
+
+
+record(mbbo, "$(P)$(R)AcquireTimeVisarUnits") {
   field(DESC, "Exposure time units setter")
-#  field(DTYP, "stream")
-#  field(OUT, "@visar.proto set_exposure_time($(P)$(R)) $(PORTC) 0")
-#  field(EGU, "ns")
+  field(FLNK, "$(P)$(R)AcquireTimeVisar_RBV")
+  field(ZRST, "us")
+  field(ZRVL, "0")
+  field(ONST, "ms")
+  field(ONVL, "1")
+  field(TWST, "s")
+  field(TWVL, "2")
+  field(THST, "min")
+  field(THVL, "3")
+    
+}
+
+
+
+record(ai, "$(P)$(R)AcquireTimeVisar_RBV") {
+  field(DESC, "Visar raw exposure time")
+  field(DTYP, "stream")
+  field(INP, "@visar.proto get_exposure_time($(P)$(R)) $(PORTC) 0")
+  field(SCAN, "1 second")
   field(PINI, "YES")
+  field(FLNK, "$(P)$(R)AcquireTimeCalc_RBV")
+}
+
+
+record(ao, "$(P)$(R)AcquireTimeVisar") {
+  field(DESC, "Visar raw exposure time")
+  field(DTYP, "stream")
+  field(OUT, "@visar.proto set_exposure_time($(P)$(R)) $(PORTC) 0")
+  field(FLNK, "$(P)$(R)AcquireTimeVisar_RBV")
+}
+
+
+record(calc, "$(P)$(R)AcquireTimeCalc_RBV") {
+  field(DESC, "Exposure time calc")
+  field(INPA, "$(P)$(R)AcquireTimeVisar_RBV CPP MS") 
+  field(INPB, "$(P)$(R)AcquireTimeVisarUnits_RBV CPP MS")
+  field(CALC, "(B==0)? A*0.000001 : (B==1)? A*0.001: (B==2)? A: (B==3)? A*60 : -1")
+  field( PREC, "6" )
+ # field(FLNK, "$(P)$(R)AcquireTime_RBV")
+  field(EGU, "sec")
 }
 
 
 record(ai, "$(P)$(R)AcquireTime_RBV") {
   field(DESC, "Exposure time")
-  field(DTYP, "stream")
-  field(INP, "@visar.proto get_exposure_time($(P)$(R)) $(PORTC) 0")
-  field(SCAN, "1 second")
+  field(INP, "$(P)$(R)AcquireTimeCalc_RBV.VAL")   ## NAO FUNCIONA ESTA MERDA
+#  field(VAL, "4")
+ # field(SCAN, "1 second")
   field(PINI, "YES")
-  field(EGU, "$(P)$(R)AcquireTimeUnits_RBV PP")
+  field(EGU, "s")
 }
+
 
 record(ao, "$(P)$(R)AcquireTime") {
   field(DESC, "Exposure time")
   field(DTYP, "stream")
-  field(OUT, "@visar.proto set_exposure_time($(P)$(R)) $(PORTC) 0")
-#  field(EGU, "ns")
-  field(PINI, "YES")
+  field(OUT, "@visar.proto set_exposure_time_s($(P)$(R)) $(PORTC) 0")
+  field(FLNK, "$(P)$(R)AcquireTime_RBV")
+  field(EGU, "s")
 }
+
+
+
+
+
 
 
 
@@ -84,9 +136,10 @@ record(ao, "$(P)$(R)AcquireTime") {
 
 
 record(ai, "$(P)$(R)Gain_RBV") {
+  field(DTYP, "Soft Channel" )
   field(DESC, "II-Gain")
   field(INP,"$(P)$(R)IIGain_RBV PP")
-  #field(SCAN, "1 second")
+#  field(SCAN, "1 second")
   field(PINI, "YES")
 }
 
@@ -94,7 +147,6 @@ record(ao, "$(P)$(R)Gain") {
   field(DESC, "II-Gain setter")
   field(DTYP, "Soft Channel" )
   field(OUT,"$(P)$(R)IIGain PP")
-  field(PINI, "YES")
 }
 
 record(mbbi, "$(P)$(R)ImageMode_RBV") {
@@ -117,6 +169,8 @@ record(mbbo, "$(P)$(R)ImageMode") {
   field(DESC, "Trigger mode setter")
   field(DTYP, "stream")
   field(OUT, "@visar.proto set_trigger_mode($(P)$(R)) $(PORTC) 0")
+  field(FLNK, "$(P)$(R)ImageMode_RBV")
+
 
   field(ZRST, "Single")
   field(ZRVL, "0")
@@ -124,7 +178,7 @@ record(mbbo, "$(P)$(R)ImageMode") {
   field(ONVL, "1")
   field(TWST, "")
   field(TWVL, "")
-  field(PINI, "YES")
+
 }
 
 record(mbbi, "$(P)$(R)TriggerMode_RBV") {
@@ -145,12 +199,14 @@ record(mbbo, "$(P)$(R)TriggerMode") {
   field(DESC, "Mode setter")
   field(DTYP, "stream")
   field(OUT, "@visar.proto set_mode($(P)$(R)) $(PORTC) 0")
+  field(FLNK, "$(P)$(R)TriggerMode_RBV")
+
 
   field(ZRST, "Focus")
   field(ZRVL, "0")
   field(ONST, "Operate")
   field(ONVL, "1")
-  field(PINI, "YES")
+
 
 }
 
@@ -161,15 +217,16 @@ record(longin, "$(P)$(R)IIGain_RBV") {
   field(DESC, "II-Gain")
   field(DTYP, "stream")
   field(INP, "@visar.proto get_II_gain($(P)$(R)) $(PORTC) 0")
-  field(SCAN, "Passive")
+ # field(SCAN, "1 second")
   field(PINI, "YES")
+  field(FLNK, "$(P)$(R)Gain_RBV")
 }
 
 record(longout, "$(P)$(R)IIGain") {
   field(DESC, "II-Gain setter")
   field(DTYP, "stream")
   field(OUT, "@visar.proto set_II_gain($(P)$(R)) $(PORTC) 0")
-  field(PINI, "YES")
+  field(FLNK, "$(P)$(R)IIGain_RBV")
 }
 
 
@@ -184,8 +241,8 @@ record(longin, "$(P)$(R)FocusTimeOver_RBV") {
 record(longout, "$(P)$(R)FocusTimeOver") {
   field(DESC, "Focus Over Time Setter")
   field(DTYP, "stream")
-  field(OUT, "@visar.proto set_focus_time_over($(P)$(R)) $(PORTC) 0")
-  field(PINI, "YES")
+  field(FLNK, "$(P)$(R)FocusTimeOver_RBV")
+  field(OUT, "@visar.proto set_focus_time_over($(P)$(R)) $(PORTC) 0")  field(PINI, "YES")
 }
 
 
@@ -205,11 +262,11 @@ record(mbbo, "$(P)$(R)Shutter") {
   field(DESC, "Shutter setter")
   field(DTYP, "stream")
   field(OUT, "@visar.proto set_shutter($(P)$(R)) $(PORTC) 0")
+  field(FLNK, "$(P)$(R)Shutter_RBV")
   field(ZRST, "Closed")
   field(ZRVL, 0)
   field(ONST, "Open")
   field(ONVL, 1)
-  field(PINI, "YES")
 }
 
 
@@ -224,6 +281,7 @@ record(mbbi, "$(P)$(R)GateMode_RBV") {
   field(ONVL, 1)
   field(TWST, "Open Fixed")
   field(TWVL, 2)
+
   #field(SCAN, "1 second")
   field(PINI, "YES")
 }
@@ -232,13 +290,14 @@ record(mbbo, "$(P)$(R)GateMode") {
   field(DESC, "Gate mode setter")
   field(DTYP, "stream")
   field(OUT, "@visar.proto set_gate_mode($(P)$(R)) $(PORTC) 0")
+  field(FLNK, "$(P)$(R)GateMode_RBV")
+
   field(ZRST, "Normal")
   field(ZRVL, 0)
   field(ONST, "Gate")
   field(ONVL, 1)
   field(TWST, "Open Fixed")
   field(TWVL, 2)
-  field(PINI, "YES")
 }
 
 record(mbbi, "$(P)$(R)TriggerStatus_RBV") {
@@ -260,14 +319,14 @@ record(mbbo, "$(P)$(R)TriggerStatus") {
   field(DESC, "Trigger status")
   field(DTYP, "stream")
   field(OUT, "@visar.proto set_trigger_status($(P)$(R)) $(PORTC) 0")
+  field(FLNK, "$(P)$(R)TriggerStatus_RBV")
+
   field(ZRST, "Ready")
   field(ZRVL, 0)
   field(ONST, "Fired")
   field(ONVL, 1)
   field(TWST, "Do Reset")
   field(TWVL, 2)
-
-  field(PINI, "YES")
 }
 
 
@@ -278,6 +337,7 @@ record(mbbi, "$(P)$(R)TimeRange_RBV") {
   field(DESC, "Time Range")
   field(DTYP, "stream")
   field(INP, "@visar.proto get_time_range($(P)$(R)) $(PORTC) 0")
+
 
   field(ZRST, "0.5 ns")
   field(ZRVL, 0)
@@ -314,12 +374,15 @@ record(mbbi, "$(P)$(R)TimeRange_RBV") {
 
   field(PINI, "YES")
   #field(SCAN, "1 second")
+
 }
 
 record(mbbo, "$(P)$(R)TimeRange") {
   field(DESC, "Time Range setter")
   field(DTYP, "stream")
   field(OUT, "@visar.proto set_time_range($(P)$(R)) $(PORTC) 0")
+
+  field(FLNK, "$(P)$(R)TimeRange_RBV")
 
   field(ZRST, "0.5 ns")
   field(ZRVL, 0)
@@ -353,7 +416,7 @@ record(mbbo, "$(P)$(R)TimeRange") {
   field(FTVL, 14)
   field(FFST, "50 us")
   field(FFVL, 15)
-  field(PINI, "YES")
+
 
 }
 
@@ -378,7 +441,7 @@ record(bo, "$(P)$(R)AppStart") {
   field(DESC, "Start app")
   field(DTYP, "stream")
   field(OUT, "@visar.proto app_start($(P)$(R)) $(PORTC) 0")
-  field(PINI, "YES")
+#  field(PINI, "YES")
 }
 
 record(bo, "$(P)$(R)AppEnd") {

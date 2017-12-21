@@ -21,8 +21,7 @@
 # ==========================================================
 ADCORE_MODULE_VERSION = R2.6-2.2.0
 ASYN_MODULE_VERSION = R4.31-1.0.0
-STREAM_MODULE_VERSION = R2.7.7-1.0
-STREAMDEVICE_MODULE_VERSION=R2.7.7-1.0
+STREAMDEVICE_MODULE_VERSION=R2.6-0.1.8
 
 # ==========================================================
 # External Support module path definitions
@@ -41,7 +40,6 @@ STREAMDEVICE_MODULE_VERSION=R2.7.7-1.0
 # Set EPICS_BASE last so it appears last in the DB, DBD, INCLUDE, and LIB search paths
 ADCORE = $(EPICS_MODULES)/ADCore/$(ADCORE_MODULE_VERSION)
 ASYN = $(EPICS_MODULES)/asyn/$(ASYN_MODULE_VERSION)
-STREAM = $(EPICS_MODULES)/stream/$(STREAM_MODULE_VERSION)
 STREAMDEVICE=$(EPICS_MODULES)/streamdevice/$(STREAMDEVICE_MODULE_VERSION)
 
 EPICS_BASE = $(EPICS_SITE_TOP)/base/$(BASE_MODULE_VERSION)
