@@ -1,9 +1,3 @@
-#All commands are case insensitive.
-#Commands have the general form:
-#     COMMAND(OPTIONAL,COMMA,SEPARATED,PARAMETER,LIST)\r
-#Responses have the general form:
-#     CODE,COMMAND,OPTIONAL,COMMA,SEPARATED,RESPONSE,VALUES\r
-
 
 InTerminator  = CR;
 OutTerminator = CR;
@@ -11,6 +5,24 @@ ReplyTimeout  =  2000;
 ReadTimeout   =  100;
 WriteTimeout  =  100;
 ExtraInput    = Ignore;
+
+
+
+
+get_model{
+	out "MainParamGet(StreakCamera)";
+	in  "0,MainParamGet,%40c";
+#	@mismatch { in  "%(\$1ErrorCode)d,MainParamGet";}
+}
+
+
+
+
+
+
+
+
+
 
 app_info{
 	out "AppInfo(Version)";
@@ -33,7 +45,8 @@ set_exposure_time{
 }
 
 set_exposure_time_s{
-	out "CamParamSet(Live,Exposure,%.6f s)";
+#	out "CamParamSet(Live,Exposure,%.6f s)";
+		out "CamParamSet(Live,Exposure,%(\$1AcquireTime).6f s)";
 	in  "0,CamParamSet";
 #	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
 }
@@ -132,12 +145,6 @@ get_focus_time_over{
 #	@mismatch { in  "%(\$1ErrorCode)d";}
 }
 
-get_model{
-	out "MainParamGet(StreakCamera)";
-	in  "0,MainParamGet,%40c";
-#	@mismatch { in  "%(\$1ErrorCode)d,MainParamGet";}
-}
-
 
 set_time_range{
 	out "DevParamSet(TD,Time Range,%{0.5 ns|1 ns|2 ns|5 ns|10 ns|20 ns|50 ns|100 ns|200 ns|500 ns|1 us|2 us|5 us|10 us|20 us|50 us})";
@@ -149,6 +156,7 @@ get_time_range{
 	in "0,DevParamGet,%{0.5 ns|1 ns|2 ns|5 ns|10 ns|20 ns|50 ns|100 ns|200 ns|500 ns|1 us|2 us|5 us|10 us|20 us|50 us}";
 #	@mismatch { in  "%(\$1ErrorCode)d,CamParamGet";}
 }
+
 
 
 
