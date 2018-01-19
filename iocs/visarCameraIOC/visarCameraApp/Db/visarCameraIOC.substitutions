@@ -1,0 +1,24 @@
+file ADBase.template
+{
+	{
+	P		= $(P),
+	R		= $(R),
+	PORT	= $(PORT),
+	ADDR	= $(ADDR),
+	TIMEOUT	= $(TIMEOUT)
+	}
+}
+
+file visarCamera.template
+{
+	{
+	P				= $(P),
+	R				= $(R),
+	PORT	= $(PORT),
+    ADDR	= $(ADDR),
+    TIMEOUT	= $(TIMEOUT),
+    PORTC           =$(PORTC),
+    PORTD           =$(PORTD)
+	}
+}
+
