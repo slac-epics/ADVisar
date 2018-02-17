@@ -18,6 +18,7 @@ file visarCamera.template
     ADDR	= $(ADDR),
     TIMEOUT	= $(TIMEOUT),
     PORTC           =$(PORTC),
+    PORTC2           =$(PORTC2),
     PORTD           =$(PORTD)
 	}
 }

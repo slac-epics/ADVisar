@@ -1,207 +1,264 @@
-
-InTerminator  = CR;
-OutTerminator = CR;
-ReplyTimeout  =  2000;
-ReadTimeout   =  100;
-WriteTimeout  =  100;
-ExtraInput    = Ignore;
+    OutTerminator = CR;
+    ReplyTimeout  =  300;
+    ReadTimeout   =  100;
+    WriteTimeout  =  100;
+    LockTimeout = 300;
 
 
 
+#########################################
+# Exposure / AD AcquireTime in ns       #
+#########################################
 
-get_model{
-	out "MainParamGet(StreakCamera)";
-	in  "0,MainParamGet,%40c";
-#	@mismatch { in  "%(\$1ErrorCode)d,MainParamGet";}
-}
-
-
-
-
-
-
-
-
-
-
-app_info{
-	out "AppInfo(Version)";
-	in  "0,AppInfo,%40c";
-#	@mismatch { "%(\$1ErrorCode)d,CamParamSet,"%(\$1AppStatus)d;}
-}
-
-
-
-
-# Parameters
-############################
-
-# Exposure / AD AcquireTime in ns
-############################
 set_exposure_time{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "CamParamSet(Live,Exposure,%.6f %(\$1AcquireTimeVisarUnits){us|ms|s|min})";
-	in  "0,CamParamSet";
-#	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
+	in "%*/(?m)0,CamParamSet\r/";
 }
 
 set_exposure_time_s{
-#	out "CamParamSet(Live,Exposure,%.6f s)";
-		out "CamParamSet(Live,Exposure,%(\$1AcquireTime).6f s)";
-	in  "0,CamParamSet";
-#	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
+    InTerminator = ;
+    ExtraInput   = Ignore;
+	out "CamParamSet(Live,Exposure,%(\$1AcquireTime).6f s)";
+	in "%*/(?m)0,CamParamSet\r/";
 }
 
 get_exposure_time{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "CamParamGet(Live,Exposure)";
-	in  "0,CamParamGet,%f %(\$1AcquireTimeVisarUnits_RBV){us|ms|s|m}";
-#	@mismatch { in  "%(\$1ErrorCode)d,%(\$1ErrorCommand)[_a-z],%(\$1ErrorMessage)c";}
+	in  "%*/(?m)0,CamParamGet,/%f %(\$1AcquireTimeVisarUnits_RBV){us|ms|s|m}\r";
 }
 
+#########################################
+#     #
+#########################################
 
 # II Gain / AD Gain
 set_II_gain{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamSet(TD,II-Gain,%d)";
-	in  "0,DevParamSet";
-#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+	in "%*/(?m)0,DevParamSet\r/";
 }
 
 get_II_gain{
-	out "DevParamGet(TD,II-Gain)";
-	in  "0,DevParamGet,%d";
-#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+
+
+
+    InTerminator = "";
+    ExtraInput   = Ignore;
+    out "DevParamGet(TD,II-Gain)";
+
+#	in  "%*/(.?)\r/0,DevParamGet,%s\r%*/(.?)\r";
+
+
+	in "%.2/([WF].*\r)*0,DevParamGet,([0-9]+)/"
 }
 
-
+#########################################
+#     #
+#########################################
 
 set_mode{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamSet(TD,Mode,%{Focus|Operate})";
-	in "0,DevParamSet";
-#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
-}
-get_mode{
-	out "DevParamGet(TD,Mode)";
-	in "0,DevParamGet,%{Focus|Operate}";
-#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet,%{Focus|Operate}";}
+	in "%*/(?m)0,DevParamSet\r/";
 }
 
+get_mode{
+    InTerminator = ;
+    ExtraInput   = Ignore;
+	out "DevParamGet(TD,Mode)";
+	in "%*/(?m)0,DevParamGet,/%{Focus|Operate}\r";
+}
+
+#########################################
+#     #
+#########################################
 
 set_gate_mode{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamSet(TD,Gate Mode,%{Normal|Gate|Open Fixed})";
-	in "0,DevParamSet";
-#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
-
+	in "%*/(?m)0,DevParamSet\r/";
 }
+
 get_gate_mode{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamGet(TD,Gate Mode)";
-	in "0,DevParamGet,%{Normal|Gate|Open Fixed}";
-#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet,%{Normal|Gate|Open Fixed}";}
+	in "%*/(?m)0,DevParamGet,/%{Normal|Gate|Open Fixed}\r";
 }
 
+#########################################
+#     #
+#########################################
 
 set_shutter{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamSet(TD,Shutter,%{Closed|Open})";
-	in "0,DevParamSet";
-#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+	in "%*/(?m)0,DevParamSet\r/";
 }
 get_shutter{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamGet(TD,Shutter)";
-	in "0,DevParamGet,%{Closed|Open}";
-#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
+	in "%*/(?m)0,DevParamGet,/%{Closed|Open}\r";
 }
+
+#########################################
+#     #
+#########################################
 
 set_trigger_mode{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamSet(TD,Trig. Mode,%{Single|Cont|xx})";
-	in "0,DevParamSet";
-#	@mismatch { in  "%(\$1ErrorCode)d,CamParamSet";}
+	in "%*/(?m)0,DevParamSet\r/";
 }
 get_trigger_mode{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamGet(TD,Trig. Mode)";
-	in "0,DevParamGet,%{Single|Cont|xx}";
-#	@mismatch { in  "%(\$1ErrorCode)d,CamParamGet,%{Single|Cont}";}
+	in "%*/(?m)0,DevParamGet,/%{Single|Cont|xx}\r";
 }
 
+#########################################
+#     #
+#########################################
+
 set_trigger_status{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamSet(TD,Trigger status,%{Ready|Fired|Do Reset})";
-	in "0,DevParamSet";
-#	@mismatch { in "%(\$1ErrorCode)d,CamParamGet,%{Ready|Fired|Do Reset}"; }
+	in "%*/(?m)0,DevParamSet\r/";
 }
 
 get_trigger_status{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamGet(TD,Trigger status)";
-	in "0,DevParamGet,%{Ready|Fired|Do Reset}";
-#	@mismatch { in "%(\$1ErrorCode)d,CamParamGet,%{Ready|Fired|Do Reset}"; }
+	in "%*/(?m)0,DevParamGet,/%{Ready|Fired|Do Reset}\r";
 }
 
-
-set_focus_time_over{
-	out "DevParamSet(TD,FocusTimeOver,%d)";
-	in "0,DevParamSet";
-#	@mismatch { in  "%(\$1ErrorCode)d,DevParamSet";}
-}
-
-get_focus_time_over{
-	out "DevParamGet(TD,FocusTimeOver)";
-	in "0,DevParamGet,%d";
-#	@mismatch { in  "%(\$1ErrorCode)d";}
-}
-
+#########################################
+#     #
+#########################################
 
 set_time_range{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamSet(TD,Time Range,%{0.5 ns|1 ns|2 ns|5 ns|10 ns|20 ns|50 ns|100 ns|200 ns|500 ns|1 us|2 us|5 us|10 us|20 us|50 us})";
-	in "0,DevParamSet";
-#	@mismatch { in  "%(\$1ErrorCode)d,CamParamSet";}
+	in "%*/(?m)0,DevParamSet\r/";
 }
+
 get_time_range{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "DevParamGet(TD,Time Range)";
-	in "0,DevParamGet,%{0.5 ns|1 ns|2 ns|5 ns|10 ns|20 ns|50 ns|100 ns|200 ns|500 ns|1 us|2 us|5 us|10 us|20 us|50 us}";
-#	@mismatch { in  "%(\$1ErrorCode)d,CamParamGet";}
+	in "%*/(?m)0,DevParamGet,/%{0.5 ns|1 ns|2 ns|5 ns|10 ns|20 ns|50 ns|100 ns|200 ns|500 ns|1 us|2 us|5 us|10 us|20 us|50 us}\r";
+}
+
+#########################################
+#     #
+#########################################
+
+set_focus_time_over{
+    InTerminator = ;
+    ExtraInput   = Ignore;
+    out "DevParamSet(TD,FocusTimeOver,%d)";
+    in "%*/(?m)0,DevParamSet\r/";
 }
 
 
-
-
-#####
-
-remote_ready {
-	in "RemoteEx Ready";
-}
-
-remote_data_ready {
-	in "RemoteEx Data Ready";
+get_focus_time_over{
+    InTerminator = ;
+    ExtraInput   = Ignore;
+   out "DevParamGet(TD,FocusTimeOver)";
+   in "%*/(?m)0,DevParamGet,/%d\r";
 }
 
 
-app_start{
-	out "AppStart()";
-	in "0,AppStart";
+#########################################
+#     #
+#########################################
+
+
+#########################################
+#     #
+#########################################
+#########################################
+#     #
+#########################################
+#########################################
+#     #
+#########################################
+
+buffer_notification{
+    LockTimeout = 100;
+    ReplyTimeout = 100;
+    ReadTimeout = 100;
+    InTerminator = CR;
+    in "4,Livemonitor,RingBuffer,%d";
 }
 
-app_end{
-	out "AppEnd()";
-	in "0,AppEnd";
+#########################################
+#     #
+#########################################
+
+frame_rate_notification{
+    LockTimeout = 100;
+    ReplyTimeout = 100;
+    ReadTimeout = 100;
+    InTerminator = CR;
+    in "4,Frame rate %f Hz";
 }
 
 
-app_version{
+#########################################
+#     #
+#########################################
+
+
+
+
+#get_model{
+#    InTerminator = ;
+#    ExtraInput   = Ignore;
+#	out "MainParamGet(StreakCamera)";
+#	in  "%*/(?m)0,MainParamGet,(.*)\r/";
+#}
+
+app_info{
+    InTerminator = ;
+    ExtraInput   = Ignore;
 	out "AppInfo(Version)";
-	in "0,AppInfo,%40c";
-}
-
-acq_start{
-	out "AcqStart(Live)";
-	in "0,AcqStart";
-}
-
-acq_stop{
-	out "AcqStop()";
-	in "0,AcqStop";
+	in  "%*/(?m)0,AppInfo,/%40c\r";
 }
 
 
+start_capture{
+    out "AcqLiveMonitor(RingBuffer,10)";
+    out "AcqStart(Live)";
+}
+
+stop_capture{
+   out "AcqStop()";
+}
+
+get_frame{
+   out "ImgDataGet(Current,Data)";
+}
 
 
+start_app{
+    out "AppStart()";
+}
 
-
-
-
-
+stop_app{
+    out "AppEnd()";
+}

@@ -10,6 +10,8 @@ LIB_SRCS += visarCamera.cpp
 
 DBD += visarCameraSupport.dbd
 
+
+
 include $(ADCORE)/ADApp/commonLibraryMakefile
 
 #=============================

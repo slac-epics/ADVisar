@@ -1,475 +1,550 @@
-## visarCamera.template
-## Template database file to control the features of a Visar camera.
-##
+  ## visarCamera.template
+  ## Template database file to control the features of a Visar camera.
+  ##
 
-include "ADBase.template"
-
-
+  include "ADBase.template"
 
 
-
-## These are the records from ADBase.template that we modify
-## Disable ReadStatus when acquisition is active because querying the detector
-## when it is streaming causes dropped frames
-record(bo, $(P)$(R)ReadStatus) {
-  field(SDIS, "$(P)$(R)Acquire NPP NMS")
-  field(DISV, "1")
-}
-
-## Model
-record( stringin, "$(P)$(R)Model_RBV" )
-{
-	field(DESC, "Camera Model")
-	  field(DTYP, "stream")
-	  field(INP, "@visar.proto get_model($(P)$(R)) $(PORTC) 0")
-	  field(SCAN, "10 seconds")
-	  field(PINI, "YES")
-}
-
+#########################################
+#     #
+#########################################
 
 record(mbbi, "$(P)$(R)AcquireTimeVisarUnits_RBV") {
-  field(DESC, "Exposure time units")
-  field(ZRST, "us")
-  field(ZRVL, "0")
-  field(ONST, "ms")
-  field(ONVL, "1")
-  field(TWST, "s")
-  field(TWVL, "2")
-  field(THST, "min")
-  field(THVL, "3")
-  field(PINI, "NO")
-    field(SDIS, "$(P)$(R)Acquire NPP NMS")
-    field(DISV, "1")
+    field(DESC, "Exposure time units")
+    field(ZRST, "us")
+    field(ZRVL, "0")
+    field(ONST, "ms")
+    field(ONVL, "1")
+    field(TWST, "s")
+    field(TWVL, "2")
+    field(THST, "min")
+    field(THVL, "3")
+    field(PINI, "NO")
 }
 
 record(mbbo, "$(P)$(R)AcquireTimeVisarUnits") {
-  field(DESC, "Exposure time units setter")
-  field(ZRST, "us")
-  field(ZRVL, "0")
-  field(ONST, "ms")
-  field(ONVL, "1")
-  field(TWST, "s")
-  field(TWVL, "2")
-  field(THST, "min")
-  field(THVL, "3")
-  field(PINI, "NO")
-  field(FLNK, "$(P)$(R)AcquireTimeVisar.PROC")
-    field(SDIS, "$(P)$(R)Acquire NPP NMS")
-    field(DISV, "1")
-
+    field(DESC, "Exposure time units setter")
+    field(ZRST, "us")
+    field(ZRVL, "0")
+    field(ONST, "ms")
+    field(ONVL, "1")
+    field(TWST, "s")
+    field(TWVL, "2")
+    field(THST, "min")
+    field(THVL, "3")
+    field(PINI, "NO")
+    field(FLNK, "$(P)$(R)AcquireTimeVisar.PROC")
 }
-
 
 record(ai, "$(P)$(R)AcquireTimeVisar_RBV") {
-  field(DESC, "Visar raw exposure time")
-  field(DTYP, "stream")
-  field(INP, "@visar.proto get_exposure_time($(P)$(R)) $(PORTC) 0")
-  field(SCAN, "1 second")
-  field(PINI, "YES")
-  field(FLNK, "$(P)$(R)AcquireTimeCalc_RBV.PROC")
-    field(SDIS, "$(P)$(R)Acquire NPP NMS")
-    field(DISV, "1")
+    field(DESC, "Visar raw exposure time")
+    field(DTYP, "stream")
+    field(INP, "@visar.proto get_exposure_time($(P)$(R)) $(PORTC) 0")
+    field(SCAN, "Passive")
+    field(PINI, "NO")
+    field(FLNK, "$(P)$(R)AcquireTimeCalc_RBV.PROC")
 }
-
 
 record(ao, "$(P)$(R)AcquireTimeVisar") {
-  field(DESC, "Visar raw exposure time")
-  field(DTYP, "stream")
-  field(OUT, "@visar.proto set_exposure_time($(P)$(R)) $(PORTC) 0")
-  field(FLNK, "$(P)$(R)AcquireTimeVisar_RBV.PROC")
-  field(PINI, "NO")
-    field(SDIS, "$(P)$(R)Acquire NPP NMS")
-    field(DISV, "1")
+    field(DESC, "Visar raw exposure time")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto set_exposure_time($(P)$(R)) $(PORTC) 0")
+    field(FLNK, "$(P)$(R)AcquireTimeVisar_RBV.PROC")
+    field(PINI, "NO")
 }
-
 
 record(calcout, "$(P)$(R)AcquireTimeCalc_RBV") {
-  field(DESC, "Exposure time calc")
-  field(INPA, "$(P)$(R)AcquireTimeVisar_RBV CPP MS")
-  field(INPB, "$(P)$(R)AcquireTimeVisarUnits_RBV CPP MS")
-  field(CALC, "(B==0)? A*0.000001 : (B==1)? A*0.001: (B==2)? A: (B==3)? A*60 : -1")
-  field( PREC, "6" )
-  #field(FLNK, "$(P)$(R)AcquireTime_RBV.PROC")
-  field(EGU, "sec")
+    field(DESC, "Exposure time calc")
+    field(INPA, "$(P)$(R)AcquireTimeVisar_RBV CPP MS")
+    field(INPB, "$(P)$(R)AcquireTimeVisarUnits_RBV CPP MS")
+    field(CALC, "(B==0)? A*0.000001 : (B==1)? A*0.001: (B==2)? A: (B==3)? A*60 : -1")
+    field( PREC, "6" )
+    field(EGU, "sec")
     field(OOPT,"Every Time")
     field(OUT,"$(P)$(R)AcquireTime_RBV PP")
-  field(PINI, "NO")
-    field(SDIS, "$(P)$(R)Acquire NPP NMS")
-    field(DISV, "1")
+    field(PINI, "NO")
 }
-
 
 record(ao, "$(P)$(R)AcquireTime") {
-  field(FLNK, "$(P)$(R)AcquireTimeStream.PROC")
+    field(FLNK, "$(P)$(R)AcquireTimeStream.PROC")
 }
-
 
 record(ao, "$(P)$(R)AcquireTimeStream") {
-  field(DESC, "Exposure time stream")
-  field(DTYP, "stream")
-  field(OUT, "@visar.proto set_exposure_time_s($(P)$(R)) $(PORTC) 0")
-  field(EGU, "sec")
-  field(PINI, "YES")
-  field(FLNK, "$(P)$(R)AcquireTimeVisar_RBV.PROC")
-    field(SDIS, "$(P)$(R)Acquire NPP NMS")
-    field(DISV, "1")
+    field(DESC, "Exposure time stream")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto set_exposure_time_s($(P)$(R)) $(PORTC) 0")
+    field(EGU, "sec")
+    field(PINI, "NO")
+    field(FLNK, "$(P)$(R)AcquireTimeVisar_RBV.PROC")
 }
 
+#########################################
+#     #
+#########################################
+
 record(ai, "$(P)$(R)Gain_RBV") {
-  field(DTYP, "Soft Channel" )
-  field(DESC, "II-Gain")
-  field(INP,"$(P)$(R)IIGain_RBV CP MS")
-  field(SCAN, "Passive")
-  field(PINI, "NO")
-      field(SDIS, "$(P)$(R)Acquire NPP NMS")
-      field(DISV, "1")
+    field(DESC, "II-Gain")
+    field(INP,"$(P)$(R)IIGain_RBV CP MS")
+    field(PINI, "NO")
 }
 
 record(ao, "$(P)$(R)Gain") {
-  field(DESC, "II-Gain setter")
-  field(DTYP, "Soft Channel" )
-  field(OUT,"$(P)$(R)IIGain PP")
-  field(PINI, "YES")
-      field(SDIS, "$(P)$(R)Acquire NPP NMS")
-      field(DISV, "1")
+    field(DESC, "II-Gain setter")
+    field(DTYP, "Soft Channel" )
+    field(OUT,"$(P)$(R)IIGain PP")
+    field(PINI, "NO")
 }
 
-record(longin, "$(P)$(R)IIGain_RBV") {
-  field(DESC, "II-Gain")
-  field(DTYP, "stream")
-  field(INP, "@visar.proto get_II_gain($(P)$(R)) $(PORTC) 0")
-  field(PINI, "YES")
-  field(FLNK, "$(P)$(R)Gain_RBV")
-      field(SDIS, "$(P)$(R)Acquire NPP NMS")
-      field(DISV, "1")
+record(stringin, "$(P)$(R)IIGain_RBV") {
+    field(DESC, "II-Gain")
+    field(DTYP, "stream")
+    field(INP, "@visar.proto get_II_gain($(P)$(R)) $(PORTC) 0")
+    field(PINI, "NO")
+    field(FLNK, "$(P)$(R)Gain_RBV")
+    field(SCAN, "Passive")
 }
 
 record(longout, "$(P)$(R)IIGain") {
-  field(DESC, "II-Gain setter")
-  field(DTYP, "stream")
-  field(OUT, "@visar.proto set_II_gain($(P)$(R)) $(PORTC) 0")
-  field(FLNK, "$(P)$(R)IIGain_RBV")
-  field(PINI, "NO")
-      field(SDIS, "$(P)$(R)Acquire NPP NMS")
-      field(DISV, "1")
+    field(DESC, "II-Gain setter")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto set_II_gain($(P)$(R)) $(PORTC) 0")
+    field(FLNK, "$(P)$(R)IIGain_RBV")
+    field(PINI, "NO")
 }
 
 
 
 
+# NORMAL
 
-
-
+#########################################
+#     #
+#########################################
 
 record(mbbi, "$(P)$(R)ImageMode_RBV") {
-  field(DESC, "Trigger mode")
-  field(DTYP, "stream")
-  field(INP, "@visar.proto get_trigger_mode($(P)$(R)) $(PORTC) 0")
-  field(ZRST, "Single")
-  field(ZRVL, "0")
-  field(ONST, "Continuous")
-  field(ONVL, "1")
-  field(TWST, "")
-  field(TWVL, "")
-  field(PINI, "YES")
-  field(SCAN, "1 second")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
+    field(DESC, "Trigger mode")
+    field(DTYP, "stream")
+    field(INP, "@visar.proto get_trigger_mode($(P)$(R)) $(PORTC) 0")
+    field(ZRST, "Single")
+    field(ZRVL, "0")
+    field(ONST, "Continuous")
+    field(ONVL, "1")
+    field(TWST, "")
+    field(TWVL, "")
+    field(PINI, "NO")
+    field(SCAN, "Passive")
 }
 
 record(mbbo, "$(P)$(R)ImageMode") {
-  field(DESC, "Trigger mode setter")
-  field(DTYP, "stream")
-  field(OUT, "@visar.proto set_trigger_mode($(P)$(R)) $(PORTC) 0")
-  field(FLNK, "$(P)$(R)ImageMode_RBV")
-  field(ZRST, "Single")
-  field(ZRVL, "0")
-  field(ONST, "Continuous")
-  field(ONVL, "1")
-  field(TWST, "")
-  field(TWVL, "")
-  field(PINI, "YES")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
-
+    field(DESC, "Trigger mode setter")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto set_trigger_mode($(P)$(R)) $(PORTC) 0")
+    field(FLNK, "$(P)$(R)ImageMode_RBV")
+    field(ZRST, "Single")
+    field(ZRVL, "0")
+    field(ONST, "Continuous")
+    field(ONVL, "1")
+    field(TWST, "")
+    field(TWVL, "")
+    field(PINI, "NO")
 }
 
+#########################################
+#     #
+#########################################
+
 record(mbbi, "$(P)$(R)TriggerMode_RBV") {
-  field(DESC, "Mode")
-  field(DTYP, "stream")
-  field(INP, "@visar.proto get_mode($(P)$(R)) $(PORTC) 0")
-  field(ZRST, "Focus")
-  field(ZRVL, "0")
-  field(ONST, "Operate")
-  field(ONVL, "1")
-  field(PINI, "YES")
-  field(SCAN, "1 second")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
+    field(DESC, "Mode")
+    field(DTYP, "stream")
+    field(INP, "@visar.proto get_mode($(P)$(R)) $(PORTC) 0")
+    field(ZRST, "Focus")
+    field(ZRVL, "0")
+    field(ONST, "Operate")
+    field(ONVL, "1")
+    field(PINI, "NO")
+    field(SCAN, "Passive")
 }
 
 record(mbbo, "$(P)$(R)TriggerMode") {
-  field(DESC, "Mode setter")
-  field(DTYP, "stream")
-  field(OUT, "@visar.proto set_mode($(P)$(R)) $(PORTC) 0")
-  field(FLNK, "$(P)$(R)TriggerMode_RBV")
-  field(ZRST, "Focus")
-  field(ZRVL, "0")
-  field(ONST, "Operate")
-  field(ONVL, "1")
-  field(PINI, "YES")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
+    field(DESC, "Mode setter")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto set_mode($(P)$(R)) $(PORTC) 0")
+    field(FLNK, "$(P)$(R)TriggerMode_RBV")
+    field(ZRST, "Focus")
+    field(ZRVL, "0")
+    field(ONST, "Operate")
+    field(ONVL, "1")
+    field(PINI, "NO")
 }
 
+#########################################
+#     #
+#########################################
 
 record(longin, "$(P)$(R)FocusTimeOver_RBV") {
-   field(DESC, "Focus Over Time")
-   field(DTYP, "stream")
-   field(INP, "@visar.proto get_focus_time_over($(P)$(R)) $(PORTC) 0")
-  field(PINI, "YES")
-  field(SCAN, "1 second")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
+    field(DESC, "Focus Over Time")
+    field(DTYP, "stream")
+    field(INP, "@visar.proto get_focus_time_over($(P)$(R)) $(PORTC) 0")
+    field(PINI, "NO")
+    field(SCAN, "Passive")
+}
 
- record(longout, "$(P)$(R)FocusTimeOver") {
-   field(DESC, "Focus Over Time Setter")
-   field(DTYP, "stream")
-   field(FLNK, "$(P)$(R)FocusTimeOver_RBV")
-   field(OUT, "@visar.proto set_focus_time_over($(P)$(R)) $(PORTC) 0")
-     field(PINI, "YES")
-     field(SCAN, "1 second")
-           field(SDIS, "$(P)$(R)Acquire NPP NMS")
-           field(DISV, "1")
- }
+record(longout, "$(P)$(R)FocusTimeOver") {
+    field(DESC, "Focus Over Time Setter")
+    field(DTYP, "stream")
+    field(FLNK, "$(P)$(R)FocusTimeOver_RBV")
+    field(OUT, "@visar.proto set_focus_time_over($(P)$(R)) $(PORTC) 0")
+    field(PINI, "NO")
+}
 
+#########################################
+#     #
+#########################################
 
- record(mbbi, "$(P)$(R)Shutter_RBV") {
-   field(DESC, "Shutter")
-   field(DTYP, "stream")
-   field(INP, "@visar.proto get_shutter($(P)$(R)) $(PORTC) 0")
-   field(ZRST, "Closed")
-   field(ZRVL, 0)
-   field(ONST, "Open")
-   field(ONVL, 1)
-  field(PINI, "YES")
-  field(SCAN, "1 second")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
+record(mbbi, "$(P)$(R)Shutter_RBV") {
+    field(DESC, "Shutter")
+    field(DTYP, "stream")
+    field(INP, "@visar.proto get_shutter($(P)$(R)) $(PORTC) 0")
+    field(ZRST, "Closed")
+    field(ZRVL, 0)
+    field(ONST, "Open")
+    field(ONVL, 1)
+    field(PINI, "NO")
+    field(SCAN, "Passive")
+}
 
- record(mbbo, "$(P)$(R)Shutter") {
-   field(DESC, "Shutter setter")
-   field(DTYP, "stream")
-   field(OUT, "@visar.proto set_shutter($(P)$(R)) $(PORTC) 0")
-   field(FLNK, "$(P)$(R)Shutter_RBV")
-   field(ZRST, "Closed")
-   field(ZRVL, 0)
-   field(ONST, "Open")
-   field(ONVL, 1)
-  field(PINI, "YES")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
+record(mbbo, "$(P)$(R)Shutter") {
+    field(DESC, "Shutter setter")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto set_shutter($(P)$(R)) $(PORTC) 0")
+    field(FLNK, "$(P)$(R)Shutter_RBV")
+    field(ZRST, "Closed")
+    field(ZRVL, 0)
+    field(ONST, "Open")
+    field(ONVL, 1)
+    field(PINI, "NO")
+}
 
+#########################################
+#     #
+#########################################
 
-
- record(mbbi, "$(P)$(R)GateMode_RBV") {
-   field(DESC, "Gate mode")
-   field(DTYP, "stream")
-   field(INP, "@visar.proto get_gate_mode($(P)$(R)) $(PORTC) 0")
-   field(ZRST, "Normal")
-   field(ZRVL, 0)
-   field(ONST, "Gate")
-   field(ONVL, 1)
-   field(TWST, "Open Fixed")
-   field(TWVL, 2)
-  field(PINI, "YES")
-  field(SCAN, "1 second")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
-
- record(mbbo, "$(P)$(R)GateMode") {
-   field(DESC, "Gate mode setter")
-   field(DTYP, "stream")
-   field(OUT, "@visar.proto set_gate_mode($(P)$(R)) $(PORTC) 0")
-   field(FLNK, "$(P)$(R)GateMode_RBV")
+record(mbbi, "$(P)$(R)GateMode_RBV") {
+    field(DESC, "Gate mode")
+    field(DTYP, "stream")
+    field(INP, "@visar.proto get_gate_mode($(P)$(R)) $(PORTC) 0")
     field(ZRST, "Normal")
-   field(ZRVL, 0)
-   field(ONST, "Gate")
-   field(ONVL, 1)
-   field(TWST, "Open Fixed")
-   field(TWVL, 2)
-  field(PINI, "YES")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
+    field(ZRVL, 0)
+    field(ONST, "Gate")
+    field(ONVL, 1)
+    field(TWST, "Open Fixed")
+    field(TWVL, 2)
+    field(PINI, "NO")
+    field(SCAN, "Passive")
+}
 
- record(mbbi, "$(P)$(R)TriggerStatus_RBV") {
-   field(DESC, "Trigger status")
-   field(DTYP, "stream")
-   field(INP, "@visar.proto get_trigger_status($(P)$(R)) $(PORTC) 0")
-   field(ZRST, "Ready")
-   field(ZRVL, 0)
-   field(ONST, "Fired")
-   field(ONVL, 1)
-   field(TWST, "Do Reset")
-   field(TWVL, 2)
-  field(PINI, "YES")
-  field(SCAN, "1 second")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
+record(mbbo, "$(P)$(R)GateMode") {
+    field(DESC, "Gate mode setter")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto set_gate_mode($(P)$(R)) $(PORTC) 0")
+    field(FLNK, "$(P)$(R)GateMode_RBV")
+    field(ZRST, "Normal")
+    field(ZRVL, 0)
+    field(ONST, "Gate")
+    field(ONVL, 1)
+    field(TWST, "Open Fixed")
+    field(TWVL, 2)
+    field(PINI, "NO")
+}
 
- record(mbbo, "$(P)$(R)TriggerStatus") {
-   field(DESC, "Trigger status")
-   field(DTYP, "stream")
-   field(OUT, "@visar.proto set_trigger_status($(P)$(R)) $(PORTC) 0")
-   field(FLNK, "$(P)$(R)TriggerStatus_RBV")
+#########################################
+#     #
+#########################################
+
+record(mbbi, "$(P)$(R)TriggerStatus_RBV") {
+    field(DESC, "Trigger status")
+    field(DTYP, "stream")
+    field(INP, "@visar.proto get_trigger_status($(P)$(R)) $(PORTC) 0")
     field(ZRST, "Ready")
-   field(ZRVL, 0)
-   field(ONST, "Fired")
-   field(ONVL, 1)
-   field(TWST, "Do Reset")
-   field(TWVL, 2)
-  field(PINI, "YES")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
+    field(ZRVL, 0)
+    field(ONST, "Fired")
+    field(ONVL, 1)
+    field(TWST, "Do Reset")
+    field(TWVL, 2)
+    field(PINI, "NO")
+    field(SCAN, "Passive")                                                             # !!!!!
+}
 
+record(mbbo, "$(P)$(R)TriggerStatus") {
+    field(DESC, "Trigger status")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto set_trigger_status($(P)$(R)) $(PORTC) 0")
+    field(FLNK, "$(P)$(R)TriggerStatus_RBV")
+    field(ZRST, "Ready")
+    field(ZRVL, 0)
+    field(ONST, "Fired")
+    field(ONVL, 1)
+    field(TWST, "Do Reset")
+    field(TWVL, 2)
+    field(PINI, "NO")
+}
 
- #{0.5 ns|1 ns|2 ns|5 ns|10 ns|20 ns|50 ns|100 ns|200 ns|500 ns|1 us|2 us|5 us|10 us|20 us|50 us}
- #"100 us","200 us","500 us","1 ms"
+#########################################
+#     #
+#########################################
 
- record(mbbi, "$(P)$(R)TimeRange_RBV") {
-   field(DESC, "Time Range")
-   field(DTYP, "stream")
-   field(INP, "@visar.proto get_time_range($(P)$(R)) $(PORTC) 0")
-   field(ZRST, "0.5 ns")
-   field(ZRVL, 0)
-   field(ONST, "1 ns")
-   field(ONVL, 1)
-   field(TWST, "2 ns")
-   field(TWVL, 2)
-   field(THST, "5 ns")
-   field(THVL, 3)
-   field(FRST, "10 ns")
-   field(FRVL, 4)
-   field(FVST, "20 ns")
-   field(FVVL, 5)
-   field(SXST, "50 ns")
-   field(SXVL, 6)
-   field(SVST, "100 ns")
-   field(SVVL, 7)
-   field(EIST, "200 ns")
-   field(EIVL, 8)
-   field(NIST, "500 ns")
-   field(NIVL, 9)
-   field(TEST, "1 us")
-   field(TEVL, 10)
-   field(ELST, "2 us")
-   field(ELVL, 11)
-   field(TVST, "5 us")
-   field(TVVL, 12)
-   field(TTST, "10 us")
-   field(TTVL, 13)
-   field(FTST, "20 us")
-   field(FTVL, 14)
-   field(FFST, "50 us")
-   field(FFVL, 15)
-  field(PINI, "YES")
-  field(SCAN, "1 second")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
+record(mbbi, "$(P)$(R)TimeRange_RBV") {
+    field(DESC, "Time Range")
+    field(DTYP, "stream")
+    field(INP, "@visar.proto get_time_range($(P)$(R)) $(PORTC) 0")
+    field(ZRST, "0.5 ns")
+    field(ZRVL, 0)
+    field(ONST, "1 ns")
+    field(ONVL, 1)
+    field(TWST, "2 ns")
+    field(TWVL, 2)
+    field(THST, "5 ns")
+    field(THVL, 3)
+    field(FRST, "10 ns")
+    field(FRVL, 4)
+    field(FVST, "20 ns")
+    field(FVVL, 5)
+    field(SXST, "50 ns")
+    field(SXVL, 6)
+    field(SVST, "100 ns")
+    field(SVVL, 7)
+    field(EIST, "200 ns")
+    field(EIVL, 8)
+    field(NIST, "500 ns")
+    field(NIVL, 9)
+    field(TEST, "1 us")
+    field(TEVL, 10)
+    field(ELST, "2 us")
+    field(ELVL, 11)
+    field(TVST, "5 us")
+    field(TVVL, 12)
+    field(TTST, "10 us")
+    field(TTVL, 13)
+    field(FTST, "20 us")
+    field(FTVL, 14)
+    field(FFST, "50 us")
+    field(FFVL, 15)
+    field(PINI, "NO")
+    field(SCAN, "Passive")
+}
 
- }
-
- record(mbbo, "$(P)$(R)TimeRange") {
-   field(DESC, "Time Range setter")
-   field(DTYP, "stream")
-   field(OUT, "@visar.proto set_time_range($(P)$(R)) $(PORTC) 0")
+record(mbbo, "$(P)$(R)TimeRange") {
+    field(DESC, "Time Range setter")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto set_time_range($(P)$(R)) $(PORTC) 0")
     field(FLNK, "$(P)$(R)TimeRange_RBV")
     field(ZRST, "0.5 ns")
-   field(ZRVL, 0)
-   field(ONST, "1 ns")
-   field(ONVL, 1)
-   field(TWST, "2 ns")
-   field(TWVL, 2)
-   field(THST, "5 ns")
-   field(THVL, 3)
-   field(FRST, "10 ns")
-   field(FRVL, 4)
-   field(FVST, "20 ns")
-   field(FVVL, 5)
-   field(SXST, "50 ns")
-   field(SXVL, 6)
-   field(SVST, "100 ns")
-   field(SVVL, 7)
-   field(EIST, "200 ns")
-   field(EIVL, 8)
-   field(NIST, "500 ns")
-   field(NIVL, 9)
-   field(TEST, "1 us")
-   field(TEVL, 10)
-   field(ELST, "2 us")
-   field(ELVL, 11)
-   field(TVST, "5 us")
-   field(TVVL, 12)
-   field(TTST, "10 us")
-   field(TTVL, 13)
-   field(FTST, "20 us")
-   field(FTVL, 14)
-   field(FFST, "50 us")
-   field(FFVL, 15)
-  field(PINI, "YES")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
-
- record(bo, "$(P)$(R)AppStart") {
-   field(DESC, "Start app")
-   field(DTYP, "stream")
-   field(OUT, "@visar.proto app_start($(P)$(R)) $(PORTC) 0")
-  field(PINI, "NO")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
-
- record(bo, "$(P)$(R)AppStop") {
-   field(DESC, "Close app")
-   field(DTYP, "stream")
-   field(OUT, "@visar.proto app_end($(P)$(R)) $(PORTC) 0")
-  field(PINI, "NO")
-        field(SDIS, "$(P)$(R)Acquire NPP NMS")
-        field(DISV, "1")
- }
-
-
-
-#----------------------------------
-# FrameRate
-#----------------------------------
-
-record(ai, "$(P)$(R)FrameRate_RBV")
-{
-    field(DESC, "FrameRate")
-    field(DTYP, "asynFloat64")
-    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))VC_FRAMERATE")
-    field(EGU, "Hz")
-    field(SCAN, "I/O Intr")
+    field(ZRVL, 0)
+    field(ONST, "1 ns")
+    field(ONVL, 1)
+    field(TWST, "2 ns")
+    field(TWVL, 2)
+    field(THST, "5 ns")
+    field(THVL, 3)
+    field(FRST, "10 ns")
+    field(FRVL, 4)
+    field(FVST, "20 ns")
+    field(FVVL, 5)
+    field(SXST, "50 ns")
+    field(SXVL, 6)
+    field(SVST, "100 ns")
+    field(SVVL, 7)
+    field(EIST, "200 ns")
+    field(EIVL, 8)
+    field(NIST, "500 ns")
+    field(NIVL, 9)
+    field(TEST, "1 us")
+    field(TEVL, 10)
+    field(ELST, "2 us")
+    field(ELVL, 11)
+    field(TVST, "5 us")
+    field(TVVL, 12)
+    field(TTST, "10 us")
+    field(TTVL, 13)
+    field(FTST, "20 us")
+    field(FTVL, 14)
+    field(FFST, "50 us")
+    field(FFVL, 15)
+    field(PINI, "NO")
 }
 
 
-#----------------------------------
-# AppSatus
-#----------------------------------
 
-record(ai, "$(P)$(R)AppStatus_RBV")
-{
-    field(DESC, "AppStatus")
+
+
+
+
+
+
+#########################################
+#     #
+#########################################
+
+#record( stringin, "$(P)$(R)Model_RBV" ) {
+#    field(DESC, "Camera Model")
+#    field(DTYP, "stream")
+#    field(INP, "@visar.proto get_model($(P)$(R)) $(PORTC) 0")
+#    field(SCAN, "Passive")
+#    field(PINI, "NO")
+#}
+
+
+
+#########################################
+#     #
+#########################################
+
+#record(bo, "$(P)$(R)AppStart") {
+#    field(DESC, "Start app")
+#    field(DTYP, "stream")
+#    field(OUT, "@visar.proto app_start($(P)$(R)) $(PORTC) 0")
+#    field(PINI, "NO")
+#}
+
+#record(bo, "$(P)$(R)AppStop") {
+#    field(DESC, "Close app")
+#    field(DTYP, "stream")
+#    field(OUT, "@visar.proto app_end($(P)$(R)) $(PORTC) 0")
+#    field(PINI, "NO")
+#}
+
+record(bo, "$(P)$(R)StartAcquisitionStream") {
+    field(DESC, "Start acquisition")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto start_capture($(P)$(R)) $(PORTC) 0")
+    field(PINI, "NO")
+}
+
+record(longout, "$(P)$(R)StartAcquisition") {
     field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))VC_APPSTATUS")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)) VC_START_ACQ")
+    field(FLNK, "$(P)$(R)StartAcquisitionStream.PROC")
     field(SCAN, "I/O Intr")
 }
+
+record(bo, "$(P)$(R)StopAcquisitionStream") {
+    field(DESC, "Stop acquisition")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto stop_capture($(P)$(R)) $(PORTC) 0")
+    field(PINI, "NO")
+}
+
+record(longout, "$(P)$(R)StopAcquisition") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)) VC_STOP_ACQ")
+    field(FLNK, "$(P)$(R)StopAcquisitionStream.PROC")
+    field(SCAN, "I/O Intr")
+}
+
+
+record(bo, "$(P)$(R)GetFrameStream") {
+    field(DESC, "Get frame")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto get_frame($(P)$(R)) $(PORTC) 0")
+    field(PINI, "NO")
+}
+
+record(longout, "$(P)$(R)GetFrame") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)) VC_GET_FRAME")
+    field(FLNK, "$(P)$(R)GetFrameStream.PROC")
+    field(SCAN, "I/O Intr")
+}
+
+
+record(bo, "$(P)$(R)StartAppStream") {
+    field(DESC, "Start App")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto start_app($(P)$(R)) $(PORTC) 0")
+    field(PINI, "NO")
+}
+
+record(longout, "$(P)$(R)StartApp") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)) VC_START_APP")
+    field(FLNK, "$(P)$(R)StartAppStream.PROC")
+    field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)$(R)StopAppStream") {
+    field(DESC, "Stop App")
+    field(DTYP, "stream")
+    field(OUT, "@visar.proto stop_app($(P)$(R)) $(PORTC) 0")
+    field(PINI, "NO")
+}
+
+record(longout, "$(P)$(R)StopApp") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)) VC_STOP_APP")
+    field(FLNK, "$(P)$(R)StopAppStream.PROC")
+    field(SCAN, "I/O Intr")
+}
+
+
+
+
+#########################################
+#     #
+#########################################
+
+record(longin, "$(P)$(R)BufferNotification") {
+    field(DTYP, "stream")
+    field(INP, "@visar.proto buffer_notification($(P)$(R)) $(PORTC2) 0")
+    field(SCAN, "I/O Intr")
+    field(FLNK, "$(P)$(R)BufferNotificationCalc.PROC")
+}
+
+record(longout, "$(P)$(R)FrameReady") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))VC_FRAME_READY")
+}
+
+record(calcout, "$(P)$(R)BufferNotificationCalc") {
+  field(INPA, "$(P)$(R)BufferNotification CPP MS")
+  field(CALC, "A")
+  field(OOPT,"Every Time")
+  field(OUT,"$(P)$(R)FrameReady PP")
+  field(PINI, "NO")
+}
+
+#########################################
+#     #
+#########################################
+
+record(ai, "$(P)$(R)FrameRateNotification") {
+    field(DTYP, "stream")
+    field(INP, "@visar.proto frame_rate_notification($(P)$(R)) $(PORTC2) 0")
+    field(SCAN, "I/O Intr")
+    field(FLNK, "$(P)$(R)FrameRateNotificationCalc.PROC")
+    field(EGU, "HZ")
+}
+
+record(ao, "$(P)$(R)FrameRate") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))VC_FRAME_RATE")
+    field(EGU, "HZ")
+}
+
+record(calcout, "$(P)$(R)FrameRateNotificationCalc") {
+  field(INPA, "$(P)$(R)FrameRateNotification CPP MS")
+  field(CALC, "A")
+  field(OOPT,"Every Time")
+  field(OUT,"$(P)$(R)FrameRate PP")
+  field(PINI, "NO")
+}
+
+
+
+
+
+
+
+
+
+
+
