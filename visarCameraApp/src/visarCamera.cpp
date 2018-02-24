@@ -49,6 +49,7 @@
 
 #include <epicsExport.h>
 #include <registryFunction.h>
+#include <aSubRecord.h>
 
 
 #define DRIVER_VERSION      0
@@ -578,7 +579,7 @@ asynStatus visarCamera::waitForFrame(double *timestamp) {
             getIntegerParam(VisarFrameReady, &frame);
             printf("%d\n", frame);
 
-            //      printf("New frame ready \n");
+                  printf("New frame ready \n");
             return asynSuccess;
         }
 
@@ -793,20 +794,121 @@ epicsExportRegistrar(visarCameraRegister);
 }
 
 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+
+double teste =0;
+
+
+double sciToDub(const string& str) {
+
+   stringstream ss(str);
+   double d = 0;
+   ss >> d;
+
+   if (ss.fail()) {
+      string s = "Unable to format ";
+      s += str;
+      s += " as a number!";
+      throw (s);
+   }
+
+   return (d);
+}
+
+
+static double get_calibration(char *path, char *time_range,double *cal) {
+  
+    ifstream infile;
+    char cNum[256] ;
+
+    string runits;
+    double c0 , c1 , c2;
+	double factor;
+
+    vector <vector <string> > data;
+
+                infile.open (path, ifstream::in);
+                if (infile.is_open())
+                {
+                        while (infile.good())
+                        {
+								infile.getline(cNum, 256);
+								
+								istringstream ss( cNum );
+								
+								vector <string> record;
+								
+								while (ss.good()){
+									ss.getline(cNum, 256, ',');
+									record.push_back( cNum );
+								}
+								data.push_back( record );
+						}
+                        infile.close();
+                }
+                else
+                {
+                        cout << "Error opening file";
+                }
+			
+			for (int k=3; k<data.size(); k++){
+				vector <string> time_cal = data[k];
+				
+				if (time_cal[0].compare(time_range)==0){
+					
+					runits = time_cal[1];
+					c0 = sciToDub(time_cal[3]);
+					c1 = sciToDub(time_cal[4]);
+					c2 = sciToDub(time_cal[5]);
+					
+					if (runits.compare("ns")==0) factor = 1e-9;
+					else if (runits.compare("us")==0) factor = 1e-6;
+					else if (runits.compare("ms")==0) factor = 1e-3;
+					else if (runits.compare("s")==0) factor = 1;
+					
+					cout << "found  "<< time_cal[0] <<  "\t"  <<  runits   <<  "\t" << factor <<  "\t" << c0 << "\t" <<  c1 << "\t" <<  c2<<  "\n";
+					
+
+					
+										
+					cal[0]=0;
+					for (int n=1;n<1344;n++){
+						cal[n]= (cal[n-1] + c0 + c1*n + c2*n*n) * factor;
+					}					
+					return 0;
+				}
+			}
+				printf("Time range not found in calibration file.");
+				return 1;
+}
 
 
 
 
 
-//static long my_asub_routine(aSubRecord *prec) {
-//    long i, *a;
-//    double sum=0;
 
-//    a = (long *)prec->a;
-//    for (i=0; i<prec->noa; i++) {
-//        sum += a[i];
-//    }
 
-//    return 0; /* process output links */
-//}
-//epicsRegisterFunction(my_asub_routine);
+static long my_asub_routine(aSubRecord *prec) {
+	
+	char *path, *time_range;
+
+	
+    path = (char *)prec->a;
+	time_range = (char *)prec->b;
+	
+	double* vala = (double*) prec->vala;
+	//get_calibration(path,time_range,vala);
+	get_calibration("/reg/neh/home/joaoprod/visar/ADVisar/VISAR1.txt",time_range,vala);
+	
+	
+	
+   return 0; /* process output links */
+}
+
+epicsRegisterFunction(my_asub_routine);
+
+
+

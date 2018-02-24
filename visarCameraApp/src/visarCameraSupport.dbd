@@ -1,1 +1,2 @@
 registrar("visarCameraRegister")
+function(my_asub_routine)

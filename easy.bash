@@ -1,7 +1,5 @@
-source /reg/g/pcds/setup/epicsenv-3.14.12.sh
+ssh psbuild-rhel5 make -C /reg/neh/home/joaoprod/visar/ADVisar
 
-#make clean
-make
 
 cd iocs/visarCameraIOC/iocBoot/iocVisarCamera/
 ./run

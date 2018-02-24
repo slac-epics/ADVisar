@@ -1,13 +1,23 @@
-    OutTerminator = CR;
-    ReplyTimeout  =  300;
-    ReadTimeout   =  100;
-    WriteTimeout  =  100;
-    LockTimeout = 300;
+################################################
+#                                              #
+#  Stream Protocol File for the Visar camera   #
+#                                              #
+#                                              #
+################################################
 
+OutTerminator =  CR;
+ReplyTimeout  =  300;
+ReadTimeout   =  100;
+WriteTimeout  =  100;
+LockTimeout   =  300;
+
+###############################################
+#  Camera Parameters                          #
+###############################################
 
 
 #########################################
-# Exposure / AD AcquireTime in ns       #
+#  Exposure time                        #
 #########################################
 
 set_exposure_time{
@@ -32,7 +42,7 @@ get_exposure_time{
 }
 
 #########################################
-#     #
+#  Gain                                 #
 #########################################
 
 # II Gain / AD Gain
@@ -44,21 +54,15 @@ set_II_gain{
 }
 
 get_II_gain{
-
-
-
     InTerminator = "";
     ExtraInput   = Ignore;
     out "DevParamGet(TD,II-Gain)";
-
 #	in  "%*/(.?)\r/0,DevParamGet,%s\r%*/(.?)\r";
-
-
 	in "%.2/([WF].*\r)*0,DevParamGet,([0-9]+)/"
 }
 
 #########################################
-#     #
+#  Trigger Mode                         #
 #########################################
 
 set_mode{
@@ -76,7 +80,7 @@ get_mode{
 }
 
 #########################################
-#     #
+#  Gate Mode                            #
 #########################################
 
 set_gate_mode{
@@ -94,7 +98,7 @@ get_gate_mode{
 }
 
 #########################################
-#     #
+#  Shutter                              #
 #########################################
 
 set_shutter{
@@ -111,16 +115,16 @@ get_shutter{
 }
 
 #########################################
-#     #
+#  Image Mode                           #
 #########################################
 
-set_trigger_mode{
+set_image_mode{
     InTerminator = ;
     ExtraInput   = Ignore;
 	out "DevParamSet(TD,Trig. Mode,%{Single|Cont|xx})";
 	in "%*/(?m)0,DevParamSet\r/";
 }
-get_trigger_mode{
+get_image_mode{
     InTerminator = ;
     ExtraInput   = Ignore;
 	out "DevParamGet(TD,Trig. Mode)";
@@ -128,7 +132,7 @@ get_trigger_mode{
 }
 
 #########################################
-#     #
+#  Trigger Status                       #
 #########################################
 
 set_trigger_status{
@@ -146,7 +150,7 @@ get_trigger_status{
 }
 
 #########################################
-#     #
+#  Time Range                           #
 #########################################
 
 set_time_range{
@@ -164,7 +168,7 @@ get_time_range{
 }
 
 #########################################
-#     #
+#  Focus Time Over                      #
 #########################################
 
 set_focus_time_over{
@@ -174,7 +178,6 @@ set_focus_time_over{
     in "%*/(?m)0,DevParamSet\r/";
 }
 
-
 get_focus_time_over{
     InTerminator = ;
     ExtraInput   = Ignore;
@@ -182,20 +185,12 @@ get_focus_time_over{
    in "%*/(?m)0,DevParamGet,/%d\r";
 }
 
+###############################################
+#  Camera Parameters                          #
+###############################################
 
 #########################################
-#     #
-#########################################
-
-
-#########################################
-#     #
-#########################################
-#########################################
-#     #
-#########################################
-#########################################
-#     #
+#  Frame Notification                   #
 #########################################
 
 buffer_notification{
@@ -207,7 +202,7 @@ buffer_notification{
 }
 
 #########################################
-#     #
+#  Frame Rate notification              #
 #########################################
 
 frame_rate_notification{
@@ -218,10 +213,71 @@ frame_rate_notification{
     in "4,Frame rate %f Hz";
 }
 
+#########################################
+#  Generic notification     #
+#########################################
+
+generic_notification{
+    LockTimeout = 100;
+    ReplyTimeout = 100;
+    ReadTimeout = 100;
+    InTerminator = CR;
+    in "4,%s";
+}
+
+
+###############################################
+#  Commands                                   #
+###############################################
 
 #########################################
-#     #
+#  Get Frame                            #
 #########################################
+
+get_frame{
+   out "ImgDataGet(Current,Data)";
+}
+
+#########################################
+#  Start capture                        #
+#########################################
+
+start_capture{
+    out "AcqLiveMonitor(RingBuffer,10)";
+    out "AcqStart(Live)";
+}
+
+#########################################
+#  Stop Capture                         #
+#########################################
+
+stop_capture{
+   out "AcqStop()";
+}
+
+#visar.proto
+
+#########################################
+#  Open Application                     #
+#########################################
+
+start_app{
+    out "AppStart()";
+}
+
+#########################################
+#  Close Application                    #
+#########################################
+
+stop_app{
+    out "AppEnd()";
+}
+
+
+
+
+
+
 
 
 
@@ -241,24 +297,3 @@ app_info{
 }
 
 
-start_capture{
-    out "AcqLiveMonitor(RingBuffer,10)";
-    out "AcqStart(Live)";
-}
-
-stop_capture{
-   out "AcqStop()";
-}
-
-get_frame{
-   out "ImgDataGet(Current,Data)";
-}
-
-
-start_app{
-    out "AppStart()";
-}
-
-stop_app{
-    out "AppEnd()";
-}

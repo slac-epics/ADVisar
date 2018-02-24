@@ -1,21 +1,14 @@
 < envPaths
 
-
-
-
 epicsEnvSet( "IP",        "172.21.46.71"       )
-#epicsEnvSet( "IP",        "localhost"       )
 epicsEnvSet( "IP_PORT1",	  "1001"     )
 epicsEnvSet( "IP_PORT2",	  "1002"     )
 epicsEnvSet( "BASE_NAME", "MEC:VISARj:01"     )
-
-
+epicsEnvSet( "CALIBATION_FILE",	  "/reg/neh/home/joaoprod/visar/ADVisar/VISAR1.txt"     )
 
 
 epicsEnvSet("STREAM_PROTOCOL_PATH", "$(TOP)/db")
 epicsEnvSet("PREFIX","$(BASE_NAME):")
-
-
 epicsEnvSet("PORT", "VC1")
 
 
@@ -28,9 +21,6 @@ epicsEnvSet EPICS_CA_MAX_ARRAY_BYTES 64008
 dbLoadDatabase("$(TOP)/dbd/visarCameraApp.dbd")
 visarCameraApp_registerRecordDeviceDriver(pdbbase)
 
-
-#drvAsynIPPortConfigure("PORT_C","localhost:9991", 0, 0, 0)
-#drvAsynIPPortConfigure("PORT_C_R","localhost:9992", 0, 0, 0)
 drvAsynIPPortConfigure("PORT_C","$(IP):$(IP_PORT1)", 0, 0, 0)
 drvAsynIPPortConfigure("PORT_D","$(IP):$(IP_PORT2)", 0, 0, 0)
 
@@ -65,8 +55,6 @@ visarCameraConfig("$(PORT)", "PORT_D" , -1,-1)
 asynSetTraceIOMask($(PORT), 0, 2)
 
 
-
-
 epicsEnvSet("QSIZE",  "2000")
 epicsEnvSet("XSIZE",  "1344")
 epicsEnvSet("YSIZE",  "1024")
@@ -97,6 +85,8 @@ dbpf $(PREFIX)image1:EnableCallbacks,1
 dbpf $(PREFIX)ArrayCallbacks,1
 dbpf $(PREFIX)Acquire,1
 dbpf $(PREFIX)AcquireTime,0.2
+
+dbpf $(PREFIX)ScalingFilePath,$(CALIBATION_FILE)
 
 
 
