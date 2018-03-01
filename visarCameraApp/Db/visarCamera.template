@@ -142,8 +142,8 @@ record(mbbo, "$(P)$(R)ImageMode") {
     field(ZRVL, "0")
     field(ONST, "Continuous")
     field(ONVL, "1")
-    field(TWST, "")
-    field(TWVL, "")
+    field(TWST, "Continuous")
+    field(TWVL, "2")
     field(PINI, "NO")
 }
 
@@ -274,7 +274,7 @@ record(mbbi, "$(P)$(R)TriggerStatus_RBV") {
     field(TWST, "Do Reset")
     field(TWVL, 2)
     field(PINI, "NO")
-    field(SCAN, "Passive")                                                             # !!!!!
+    field(SCAN, "1 second")
 }
 
 record(mbbo, "$(P)$(R)TriggerStatus") {
@@ -477,13 +477,6 @@ record(longout, "$(P)$(R)GetFrame") {
 }
 
 
-
-
-
-
-# faltam descricoes
-
-
 ####################################################
 #  Visar notifications, links to asyn parameters   #
 ####################################################
@@ -493,18 +486,21 @@ record(longout, "$(P)$(R)GetFrame") {
 #########################################
 
 record(longin, "$(P)$(R)BufferNotificationStream") {
+    field(DESC, "Frame buffer notification from camera")
     field(DTYP, "stream")
-    field(INP,  "@visar.proto buffer_notification($(P)$(R)) $(PORTC2) 0")
+    field(INP,  "@visar.proto buffer_notification($(P)$(R)) $(PORTC) 0")
     field(SCAN, "I/O Intr")
     field(FLNK, "$(P)$(R)BufferNotificationCalc.PROC")
 }
 
 record(longout, "$(P)$(R)BufferNotification") {
+    field(DESC, "Frame buffer notification to ADDriver")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))VC_FRAME_READY")
 }
 
 record(calcout, "$(P)$(R)BufferNotificationCalc") {
+    field(DESC, "Forwards frame buffer notification from camera to ADDriver")
     field(INPA, "$(P)$(R)BufferNotificationStream CPP MS")
     field(CALC, "A")
     field(OOPT, "Every Time")
@@ -517,20 +513,23 @@ record(calcout, "$(P)$(R)BufferNotificationCalc") {
 #########################################
 
 record(ai, "$(P)$(R)FrameRateNotification") {
+    field(DESC, "Frame rate notification from camera ")
     field(DTYP, "stream")
-    field(INP, "@visar.proto frame_rate_notification($(P)$(R)) $(PORTC2) 0")
+    field(INP, "@visar.proto frame_rate_notification($(P)$(R)) $(PORTC) 0")
     field(SCAN, "I/O Intr")
     field(FLNK, "$(P)$(R)FrameRateNotificationCalc.PROC")
     field(EGU, "HZ")
 }
 
 record(ao, "$(P)$(R)FrameRate") {
+    field(DESC, "Frame rate notification to ADDriver")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))VC_FRAME_RATE")
     field(EGU, "HZ")
 }
 
 record(calcout, "$(P)$(R)FrameRateNotificationCalc") {
+    field(DESC, "Forwards frame rate notification from camera to ADDriver")
     field(INPA, "$(P)$(R)FrameRateNotification CPP MS")
     field(CALC, "A")
     field(OOPT,"Every Time")
@@ -539,48 +538,50 @@ record(calcout, "$(P)$(R)FrameRateNotificationCalc") {
 }
 
 
-
 ####################################################
 #  Time scaling records                            #
 ####################################################
 
 #########################################
-#     #
+#  Path to the time scaling file        #
 #########################################
 
-record(stringin, "$(P)$(R)ScalingFilePath") {
-     
+record(waveform, "$(P)$(R)ScalingFilePath") {
+    field(DESC, "Path to the time scaling file")
+    field(FTVL,"CHAR")
+    field(NELM,"10000")
 }
 
 #########################################
-#     #
+#  SubProcess that reads the file       #
 #########################################
 
 record(aSub,"$(P)$(R)ScalingFileRead") {
-  field(SNAM,"my_asub_routine")
-       field(FTA, "STRING")
-       field(NOA, "1")
-       field(INPA, "$(P)$(R)ScalingFilePath NPP NMS")
-	   field(FTB, "STRING")
-       field(NOB, "1")
-       field(INPB, "$(P)$(R)TimeRange_RBV NPP NMS")
-	   field(FTVA, "DOUBLE")
-       field(NOVA, "1344")
-       field(OUTA, "$(P)$(R)ScalingFileRead.PROC")	
+    field(SNAM,"read_calibration_file_subprocess")
+    field(DESC, "SubProcess that reads the time scale calibration file")
+    field(FTA, "CHAR")
+    field(NOA, "10000")
+    field(INPA, "$(P)$(R)ScalingFilePath NPP NMS")
+	field(FTB, "STRING")
+    field(NOB, "1")
+    field(INPB, "$(P)$(R)TimeRange_RBV NPP NMS")
+	field(FTVA, "DOUBLE")
+    field(NOVA, "1344")
+    field(OUTA, "$(P)$(R)ScalingFileRead.PROC")
 
    }
    
 #########################################
-#     #
+#  Calibrated time scale                #
 #########################################
    
-record(waveform,"$(P)$(R)Scaling")
-{
-   field(DESC,"Time scale")
-   field(NELM,"1344")
-   field(FTVL,"DOUBLE")
-   field(PREC,"6")
-   field(EGU,"sec")
+record(waveform,"$(P)$(R)Scaling"){
+    field(DESC, "Calibrated time scale")
+    field(DESC,"Time scale")
+    field(NELM,"1344")
+    field(FTVL,"DOUBLE")
+    field(PREC,"6")
+    field(EGU,"sec")
 }
 
 

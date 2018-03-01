@@ -16,16 +16,12 @@ $(PROD_NAME)_DBD += asyn.dbd
 $(PROD_NAME)_DBD += drvAsynSerialPort.dbd
 $(PROD_NAME)_DBD += drvAsynIPPort.dbd
 $(PROD_NAME)_DBD += stream.dbd
-$(PROD_NAME)_DBD += asSupport.dbd
-
-
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 PROD_SRCS += $(PROD_NAME)_registerRecordDeviceDriver.cpp $(PROD_NAME)Main.cpp
 
 # Add locally compiled object code
 PROD_LIBS += visarCamera
-PROD_LIBS += autosave
 
 $(PROD_NAME)_LIBS += asyn
 $(PROD_NAME)_LIBS += stream

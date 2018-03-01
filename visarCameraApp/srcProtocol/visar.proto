@@ -121,7 +121,7 @@ get_shutter{
 set_image_mode{
     InTerminator = ;
     ExtraInput   = Ignore;
-	out "DevParamSet(TD,Trig. Mode,%{Single|Cont|xx})";
+	out "DevParamSet(TD,Trig. Mode,%{Single|Cont|Cont})";
 	in "%*/(?m)0,DevParamSet\r/";
 }
 get_image_mode{
@@ -271,29 +271,6 @@ start_app{
 
 stop_app{
     out "AppEnd()";
-}
-
-
-
-
-
-
-
-
-
-
-#get_model{
-#    InTerminator = ;
-#    ExtraInput   = Ignore;
-#	out "MainParamGet(StreakCamera)";
-#	in  "%*/(?m)0,MainParamGet,(.*)\r/";
-#}
-
-app_info{
-    InTerminator = ;
-    ExtraInput   = Ignore;
-	out "AppInfo(Version)";
-	in  "%*/(?m)0,AppInfo,/%40c\r";
 }
 
 
