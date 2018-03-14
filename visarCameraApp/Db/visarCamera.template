@@ -500,7 +500,7 @@ record(longout, "$(P)$(R)BufferNotification") {
 }
 
 record(calcout, "$(P)$(R)BufferNotificationCalc") {
-    field(DESC, "Forwards frame buffer notification from camera to ADDriver")
+    field(DESC, "Forwards frame buffer not. to ADDriver")
     field(INPA, "$(P)$(R)BufferNotificationStream CPP MS")
     field(CALC, "A")
     field(OOPT, "Every Time")
@@ -529,7 +529,7 @@ record(ao, "$(P)$(R)FrameRate") {
 }
 
 record(calcout, "$(P)$(R)FrameRateNotificationCalc") {
-    field(DESC, "Forwards frame rate notification from camera to ADDriver")
+    field(DESC, "Forwards frame rate not. to ADDriver")
     field(INPA, "$(P)$(R)FrameRateNotification CPP MS")
     field(CALC, "A")
     field(OOPT,"Every Time")
@@ -558,7 +558,7 @@ record(waveform, "$(P)$(R)ScalingFilePath") {
 
 record(aSub,"$(P)$(R)ScalingFileRead") {
     field(SNAM,"read_calibration_file_subprocess")
-    field(DESC, "SubProcess that reads the time scale calibration file")
+    field(DESC, "Reads the time scale cal file")
     field(FTA, "CHAR")
     field(NOA, "10000")
     field(INPA, "$(P)$(R)ScalingFilePath NPP NMS")
@@ -586,21 +586,43 @@ record(waveform,"$(P)$(R)Scaling"){
 
 
 
+####################################################
+#  Timing records                                  #
+####################################################
+#
+# TrigToTS_Calc: Calculates expected delay from trigger to timeStamp update
+# Inputs: All units in seconds
+#	A	- Camera acquire time (exposure length)
+#	B	- Camera image transmission time
+#	C	- Estimated driver processing delay before requesting timestamp
+record( calc, "$(P)$(R)TrigToTS_Calc" )
+{
+    field( INPA, "$(P)$(R)AcquireTime_RBV CP MS" )
+    field( INPB, "$(P)$(R)XmitDelay CP MS" )
+    field( INPC, "$(P)$(R)DriverProcDelay CP MS" )
+    field( CALC, "A+B+C" )
+    field( EGU,  "sec" )
+    field( PREC, "5" )
+}
+
+record( ao, "$(P)$(R)XmitDelay" )
+{
+    field( DOL,  "1.0e-6" )
+    field( EGU,  "Sec" )
+    field( PREC, "3" )
+    field( PINI, "YES" )
+    info( autosaveFields, "VAL" )
+}
+
+record( ao, "$(P)$(R)DriverProcDelay" )
+{
+    field( DOL,  "1.0e-6" )
+    field( EGU,  "Sec" )
+    field( PREC, "3" )
+    field( PINI, "YES" )
+    info( autosaveFields, "VAL" )
+}
 
 
-
-
-
-#########################################
-#     #
-#########################################
-
-#record( stringin, "$(P)$(R)Model_RBV" ) {
-#    field(DESC, "Camera Model")
-#    field(DTYP, "stream")
-#    field(INP, "@visar.proto get_model($(P)$(R)) $(PORTC) 0")
-#    field(SCAN, "Passive")
-#    field(PINI, "NO")
-#}
 
 

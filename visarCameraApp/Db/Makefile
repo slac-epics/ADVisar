@@ -13,10 +13,6 @@ include $(TOP)/configure/CONFIG
 
 DB += visarCamera.template
 
-# Nothing to build for asyn, just install from $ASYN/db
-DB_INSTALLS += $(ASYN)/db/asynRecord.db
-
-
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
 # <anyname>_template = <templatename>

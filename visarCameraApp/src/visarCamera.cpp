@@ -388,9 +388,6 @@ void visarCamera::imageGrabTask() {
         pRaw_->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
         updateTimeStamp(&pRaw_->epicsTS);
 
-
-        //    asynPortDriver::updateTimeStamp();
-
         if (arrayCallbacks) {
             /* Call the NDArray callback */
             /* Must release the lock here, or we can get into a deadlock, because we can
@@ -406,9 +403,9 @@ void visarCamera::imageGrabTask() {
         pRaw_ = NULL;
 
         /* See if acquisition is done if we are in single or multiple mode */
-        if ((imageMode == ADImageSingle) || ((imageMode == ADImageMultiple) && (numImagesCounter >= numImages))) {
-            // status |= stopCapture();
-        }
+        //if ((imageMode == ADImageSingle) || ((imageMode == ADImageMultiple) && (numImagesCounter >= numImages))) {
+        //    status |= stopCapture();
+        // }
         callParamCallbacks();
     }
 
@@ -547,7 +544,7 @@ asynStatus visarCamera::getRawFrame() {
 
     size_t read_buffer_len = SIZE_X * SIZE_Y * BPP;
 
-    read_buffer_len = 1344*1024*2;
+  //  read_buffer_len = 1344*1024*2;
 
     status |= pasynOctetSyncIO->read(pasynUserData_, rawFrame_, read_buffer_len, .5, &nread, &eomReason);
     if (status != asynSuccess) {
