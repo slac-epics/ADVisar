@@ -10,7 +10,6 @@ DB += visarCameraIOC.db
 # databases, templates, substitutions like this
 
 DB_INSTALLS += $(ASYN)/db/asynRecord.db
-
 DB_INSTALLS += $(ADVISARCAMERA)/db/visar.proto
 
 #----------------------------------------------------

@@ -8,10 +8,14 @@ PROD_IOC += $(PROD_NAME)
 
 # <name>.dbd will be created from <name>Include.dbd
 DBD += $(PROD_NAME).dbd
-
 $(PROD_NAME)_DBD += visarCameraSupport.dbd
 
-
+#$(PROD_NAME)_DBD += base.dbd
+#$(PROD_NAME)_DBD += asyn.dbd
+#$(PROD_NAME)_DBD += asynRecord.dbd
+#$(PROD_NAME)_DBD += drvAsynSerialPort.dbd
+#$(PROD_NAME)_DBD += drvAsynIPPort.dbd
+#$(PROD_NAME)_DBD += stream.dbd
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 PROD_SRCS += $(PROD_NAME)_registerRecordDeviceDriver.cpp $(PROD_NAME)Main.cpp
@@ -25,7 +29,8 @@ $(PROD_NAME)_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
 include $(ADCORE)/ADApp/commonDriverMakefile
-$(PROD_NAME)_DBD += stream.dbd                 # Must come after include $(ADCORE)/ADApp/commonDriverMakefile because it needs base.dbd
+$(PROD_NAME)_DBD += drvAsynIPPort.dbd
+$(PROD_NAME)_DBD += stream.dbd
 
 
 ifneq '$(T_A)' 'RTEMS-beatnik'

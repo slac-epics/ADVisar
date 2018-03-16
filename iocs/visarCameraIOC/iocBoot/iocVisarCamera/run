@@ -14,5 +14,5 @@ fi
 
 
 
-../../bin/${EPICS_HOST_ARCH}/visarCameraApp st.cmd
-#../../bin/linux-x86_64/visarCameraApp st.cmd
+#../../bin/${EPICS_HOST_ARCH}/visarCameraApp st.cmd
+../../bin/linux-x86_64/visarCameraApp st.cmd
