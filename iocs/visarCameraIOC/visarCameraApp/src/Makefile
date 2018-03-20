@@ -13,8 +13,7 @@ $(PROD_NAME)_DBD += visarCameraSupport.dbd
 #$(PROD_NAME)_DBD += base.dbd
 #$(PROD_NAME)_DBD += asyn.dbd
 #$(PROD_NAME)_DBD += asynRecord.dbd
-#$(PROD_NAME)_DBD += drvAsynSerialPort.dbd
-#$(PROD_NAME)_DBD += drvAsynIPPort.dbd
+$(PROD_NAME)_DBD += drvAsynIPPort.dbd
 #$(PROD_NAME)_DBD += stream.dbd
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
@@ -29,7 +28,7 @@ $(PROD_NAME)_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
 include $(ADCORE)/ADApp/commonDriverMakefile
-$(PROD_NAME)_DBD += drvAsynIPPort.dbd
+#$(PROD_NAME)_DBD += drvAsynIPPort.dbd
 $(PROD_NAME)_DBD += stream.dbd
 
 
