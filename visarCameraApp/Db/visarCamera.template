@@ -49,17 +49,20 @@ record(ai, "$(P)$(R)AcquireTimeVisar_RBV") {
     field(FLNK, "$(P)$(R)AcquireTimeCalc_RBV.PROC")
 }
 
+
+
+
 record(ao, "$(P)$(R)AcquireTimeVisar") {
     field(DESC, "Visar raw exposure time setter")
     field(DTYP, "stream")
     field(OUT,  "@visar.proto set_exposure_time($(P)$(R)) $(PORTC) 0")
-    field(FLNK, "$(P)$(R)AcquireTimeVisar_RBV.PROC")
+    field(FLNK, "$(P)$(R)AcquireTimeVisar_RBV")
     field(PINI, "NO")
 }
 
 record(calcout, "$(P)$(R)AcquireTimeCalc_RBV") {
     field(DESC, "Exposure time calc")
-    field(INPA, "$(P)$(R)AcquireTimeVisar_RBV CPP MS")
+    field(INPA, "$(P)$(R)AcquireTimeVisar_RBV NPP MS")
     field(INPB, "$(P)$(R)AcquireTimeVisarUnits_RBV CPP MS")
     field(CALC, "(B==0)? A*0.000001 : (B==1)? A*0.001: (B==2)? A: (B==3)? A*60 : -1")
     field(PREC, "6" )
@@ -69,10 +72,39 @@ record(calcout, "$(P)$(R)AcquireTimeCalc_RBV") {
     field(PINI, "NO")
 }
 
+
 record(ao, "$(P)$(R)AcquireTime") {
+    field(DESC, "Exposure in sec")
     field(FLNK, "$(P)$(R)AcquireTimeStream.PROC")
 	field(EGU,  "sec")
+	field(PINI, "NO")
+
 }
+
+record(ai, "$(P)$(R)AcquireTime_RBV") {
+    field(DTYP, "Soft Channel" )
+    field(INP,"$(P)$(R)AcquireTimeCalc_RBV CP MS")
+    field(PINI, "NO")
+    field(PREC,"6")
+    field(EGU,  "sec")
+    field(FLNK,  "$(P)$(R)AcquireTimeAsynCalc")
+}
+
+record(calcout, "$(P)$(R)AcquireTimeAsynCalc") {
+    field(DESC, "Exposure time calc")
+    field(INPA, "$(P)$(R)AcquireTime_RBV NPP MS")
+    field(CALC, "A")
+    field(OOPT, "Every Time")
+    field(OUT,  "$(P)$(R)AcquireTimeAsyn PP")
+    field(EGU,  "sec")
+    field(PINI, "NO")
+}
+
+record(ao, "$(P)$(R)AcquireTimeAsyn") {
+    field(DTYP, "asynFloat64")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1)) VC_ACQ_TIME")
+}
+
 
 record(ao, "$(P)$(R)AcquireTimeStream") {
     field(DESC, "Exposure time StreamDevice")
@@ -88,14 +120,18 @@ record(ao, "$(P)$(R)AcquireTimeStream") {
 #########################################
 
 record(ai, "$(P)$(R)Gain_RBV") {
+    field(DTYP, "Soft Channel" )
     field(INP,"$(P)$(R)IIGain_RBV CP MS")
     field(PINI, "NO")
+    field(PREC,"0")
 }
 
 record(ao, "$(P)$(R)Gain") {
     field(DTYP, "Soft Channel" )
     field(OUT,"$(P)$(R)IIGain PP")
     field(PINI, "NO")
+    field(PREC,"0")
+
 }
 
 record(longin, "$(P)$(R)IIGain_RBV") {
@@ -103,7 +139,7 @@ record(longin, "$(P)$(R)IIGain_RBV") {
     field(DTYP, "stream")
     field(INP,  "@visar.proto get_II_gain($(P)$(R)) $(PORTC) 0")
     field(PINI, "NO")
-    field(FLNK, "$(P)$(R)Gain_RBV")
+    field(FLNK, "$(P)$(R)Gain_RBV PP")
     field(SCAN, "Passive")
 }
 
@@ -142,8 +178,8 @@ record(mbbo, "$(P)$(R)ImageMode") {
     field(ZRVL, "0")
     field(ONST, "Continuous")
     field(ONVL, "1")
-    field(TWST, "Continuous")
-    field(TWVL, "2")
+    field(TWST, "")
+    field(TWVL, "")
     field(PINI, "NO")
 }
 
@@ -274,7 +310,7 @@ record(mbbi, "$(P)$(R)TriggerStatus_RBV") {
     field(TWST, "Do Reset")
     field(TWVL, 2)
     field(PINI, "NO")
-    field(SCAN, "1 second")
+    field(SCAN, "Passive")
 }
 
 record(mbbo, "$(P)$(R)TriggerStatus") {
@@ -375,6 +411,55 @@ record(mbbo, "$(P)$(R)TimeRange") {
     field(FFVL, 15)
     field(PINI, "NO")
 }
+
+###############################################
+#  #
+###############################################
+
+record(bo, "$(P)$(R)PullConfigs") {
+    field(DTYP, "Soft Channel" )
+    field(FLNK, "$(P)$(R)PullConfigsSeq")
+    field(PINI, "YES")
+    field(SCAN,"10 second")
+    field(DISV,"1")
+    field(SDIS,"$(P)$(R)Acquire_RBV PP")
+
+}
+
+
+
+
+record(seq, "$(P)$(R)PullConfigsSeq") {
+    field(LNK1, "$(P)$(R)StartAppStream PP")
+    field(LNK2, "$(P)$(R)ImageMode_RBV PP")
+    field(LNK3, "$(P)$(R)TriggerMode_RBV PP")
+    field(LNK4, "$(P)$(R)IIGain_RBV PP")
+    field(LNK5, "$(P)$(R)GateMode_RBV PP")
+    field(LNK6, "$(P)$(R)TimeRange_RBV PP")
+    field(LNK7, "$(P)$(R)Shutter_RBV PP")
+    field(LNK8, "$(P)$(R)TriggerStatus_RBV PP")
+    field(LNK9, "$(P)$(R)FocusTimeOver_RBV PP")
+    field(LNKA, "$(P)$(R)AcquireTimeVisar_RBV PP")
+
+    field(DLY1,"0.1")
+    field(DLY2,"0.1")
+    field(DLY3,"0.1")
+    field(DLY4,"0.1")
+    field(DLY5,"0.1")
+    field(DLY6,"0.1")
+    field(DLY7,"0.1")
+    field(DLY8,"0.1")
+    field(DLY9,"0.1")
+    field(DLYA,"0.1")
+
+    field(SELM, "All")
+
+
+}
+
+
+
+
 
 ###############################################
 #  Visar commands, links to asyn parameters   #
@@ -490,7 +575,7 @@ record(longin, "$(P)$(R)BufferNotificationStream") {
     field(DTYP, "stream")
     field(INP,  "@visar.proto buffer_notification($(P)$(R)) $(PORTC) 0")
     field(SCAN, "I/O Intr")
-    field(FLNK, "$(P)$(R)BufferNotificationCalc.PROC")
+    field(FLNK, "$(P)$(R)BufferNotificationCalc")
 }
 
 record(longout, "$(P)$(R)BufferNotification") {
@@ -499,43 +584,17 @@ record(longout, "$(P)$(R)BufferNotification") {
     field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))VC_FRAME_READY")
 }
 
+
 record(calcout, "$(P)$(R)BufferNotificationCalc") {
     field(DESC, "Forwards frame buffer not. to ADDriver")
-    field(INPA, "$(P)$(R)BufferNotificationStream CPP MS")
+    field(INPA, "$(P)$(R)BufferNotificationStream NPP MS")
     field(CALC, "A")
     field(OOPT, "Every Time")
     field(OUT,  "$(P)$(R)BufferNotification PP")
     field(PINI, "NO")
 }
 
-#########################################
-#  Frame Rate Notification              #
-#########################################
 
-record(ai, "$(P)$(R)FrameRateNotification") {
-    field(DESC, "Frame rate notification from camera ")
-    field(DTYP, "stream")
-    field(INP, "@visar.proto frame_rate_notification($(P)$(R)) $(PORTC) 0")
-    field(SCAN, "I/O Intr")
-    field(FLNK, "$(P)$(R)FrameRateNotificationCalc.PROC")
-    field(EGU, "HZ")
-}
-
-record(ao, "$(P)$(R)FrameRate") {
-    field(DESC, "Frame rate notification to ADDriver")
-    field(DTYP, "asynInt32")
-    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))VC_FRAME_RATE")
-    field(EGU, "HZ")
-}
-
-record(calcout, "$(P)$(R)FrameRateNotificationCalc") {
-    field(DESC, "Forwards frame rate not. to ADDriver")
-    field(INPA, "$(P)$(R)FrameRateNotification CPP MS")
-    field(CALC, "A")
-    field(OOPT,"Every Time")
-    field(OUT,"$(P)$(R)FrameRate PP")
-    field(PINI, "NO")
-}
 
 
 ####################################################
@@ -552,6 +611,7 @@ record(waveform, "$(P)$(R)ScalingFilePath") {
     field(NELM,"10000")
 }
 
+
 #########################################
 #  SubProcess that reads the file       #
 #########################################
@@ -562,29 +622,54 @@ record(aSub,"$(P)$(R)ScalingFileRead") {
     field(FTA, "CHAR")
     field(NOA, "10000")
     field(INPA, "$(P)$(R)ScalingFilePath NPP NMS")
-	field(FTB, "STRING")
+	  field(FTB, "STRING")
     field(NOB, "1")
     field(INPB, "$(P)$(R)TimeRange_RBV NPP NMS")
-	field(FTVA, "DOUBLE")
+
+	  field(FTVA, "DOUBLE")
     field(NOVA, "1344")
-    field(OUTA, "$(P)$(R)ScalingFileRead.PROC")
+    field(OUTA, "$(P)$(R)Scaling_RBV")
+
+    field(FTVB, "DOUBLE")
+    field(NOVB, "1")
+    field(OUTB, "$(P)$(R)ScaleX_RBV")
+
+    field(FTVC, "CHAR")
+    field(NOVC, "5000")
+    field(OUTC, "$(P)$(R)ScalingString_RBV")
+
+    #field(PINI, "YES")
 
    }
-   
+
 #########################################
 #  Calibrated time scale                #
 #########################################
-   
-record(waveform,"$(P)$(R)Scaling"){
+
+record(waveform,"$(P)$(R)Scaling_RBV"){
     field(DESC, "Calibrated time scale")
-    field(DESC,"Time scale")
     field(NELM,"1344")
     field(FTVL,"DOUBLE")
     field(PREC,"6")
     field(EGU,"sec")
 }
 
+record(ai, "$(P)$(R)ScaleY_RBV") {
+    field(DESC, "Y Scaling")
+    field(VAL, "1")
+}
 
+record(ai, "$(P)$(R)ScaleX_RBV") {
+    field(DESC, "X time scale")
+    field(VAL, "1")
+    field(EGU, "sec/pixel")
+}
+
+record(waveform, "$(P)$(R)ScalingString_RBV") {
+    field(DESC, "Time scaling file string")
+    field(FTVL, "CHAR")
+    field(NELM, "5000")
+}
 
 ####################################################
 #  Timing records                                  #
@@ -607,7 +692,7 @@ record( calc, "$(P)$(R)TrigToTS_Calc" )
 
 record( ao, "$(P)$(R)XmitDelay" )
 {
-    field( DOL,  "1.0e-6" )
+    field( DOL,  "0.5e-6" )
     field( EGU,  "Sec" )
     field( PREC, "3" )
     field( PINI, "YES" )
@@ -616,13 +701,25 @@ record( ao, "$(P)$(R)XmitDelay" )
 
 record( ao, "$(P)$(R)DriverProcDelay" )
 {
-    field( DOL,  "1.0e-6" )
+    field( DOL,  "0.5e-6" )
     field( EGU,  "Sec" )
     field( PREC, "3" )
     field( PINI, "YES" )
     info( autosaveFields, "VAL" )
 }
 
+record( ao, "$(P)$(R)BeamEventCode_RBV" )
+{
+    field( DOL,  "2" )
+    field( FLNK, $(P)$(R)BeamEventCodeCalc)
 
+}
 
-
+record(calcout, "$(P)$(R)BeamEventCodeCalc") {
+    field(DESC, "Forwards EVR:$(P)$(R):TRIG0:TEC")
+    field(INPA, "$(P)$(R)BeamEventCode_RBV NPP MS")
+    field(CALC, "A")
+    field(OOPT, "Every Time")
+    field(OUT,  "EVR:$(P)$(R)TRIG0:TEC PP")
+    field(PINI, "NO")
+}

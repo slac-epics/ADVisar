@@ -58,7 +58,10 @@ get_II_gain{
     ExtraInput   = Ignore;
     out "DevParamGet(TD,II-Gain)";
 #	in  "%*/(.?)\r/0,DevParamGet,%s\r%*/(.?)\r";
-	in "%.2/([WF].*\r)*0,DevParamGet,([0-9]+)/"
+#	in "%.2/([WF].*\r)*0,DevParamGet,([0-9]+)/"
+	in "%*/(?m)0,DevParamGet,/%d\r";
+
+
 }
 
 #########################################
