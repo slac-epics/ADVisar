@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <string>
 #include <iostream>
@@ -67,10 +68,7 @@
 #define VisarFrameReadyString "VC_FRAME_READY"
 #define VisarStartAcquisitionString "VC_START_ACQ"
 #define VisarStopAcquisitionString "VC_STOP_ACQ"
-#define VisarGetFrameString "VC_GET_FRAME"
-#define VisarNewFrameString "VC_NEW_FRAME"
-#define VisarStartAppString "VC_START_APP"
-#define VisarStopAppString "VC_STOP_APP"
+#define VisarFrameRateString "VC_FRAME_RATE"
 
 
 using namespace std;
@@ -81,7 +79,8 @@ static const char *driverName = "visarCamera";
 class visarCamera : public ADDriver {
 public:
 
-    visarCamera(const char *portName, const char *dataPortName,
+    visarCamera(const char *portName, const char *controlPortName,
+                const char *dataPortName,
                 int maxBuffers, size_t maxMemory,
                 int priority, int stackSize);
 
@@ -101,52 +100,39 @@ public:
 protected:
 
     // Visar Camera parameters
-    int StartAcquisition;
-#define FIRST_SD_PARAM StartAcquisition
     int VisarFrameReady;
-    int GetFrame;
-    int NewFrame;
-    int StartApp;
-    int StopApp;
+#define FIRST_SD_PARAM VisarFrameReady
+    int StartAcquisition;
     int StopAcquisition;
-#define LAST_SD_PARAM StopAcquisition
-
+    int FrameRate;
+#define LAST_SD_PARAM FrameRate
 
 private:
 
+    const char *controlPortName_;
     const char *dataPortName_;
-
     asynUser *pasynUserData_;
-
     char rawFrame_[SIZE_X * SIZE_Y * BPP];
-
     NDArray *pRaw_;
-
     epicsEventId startEventId_;
+    epicsEventId NewFrame;
 
     asynStatus connectCamera();
-
     asynStatus disconnectCamera();
-
     asynStatus startCapture();
-
     asynStatus stopCapture();
-
     asynStatus grabImage();
-
     asynStatus waitForFrameNotification();
-
     asynStatus getRawFrame();
-
 };
 
 #define NUM_SD_PARAMS (&LAST_SD_PARAM - &FIRST_SD_PARAM + 1)
 
 // Links to C
-extern "C" int visarCameraConfig(const char *portName, const char *dataPortName,
+extern "C" int visarCameraConfig(const char *portName, const char *controlPortName, const char *dataPortName,
                                  int maxBuffers, size_t maxMemory,
                                  int priority, int stackSize) {
-    new visarCamera(portName, dataPortName,
+    new visarCamera(portName, controlPortName, dataPortName,
                     maxBuffers, maxMemory, priority, stackSize);
     return (asynSuccess);
 }
@@ -174,7 +160,7 @@ static void imageGrabTaskC(void *drvPvt) {
   * \param[in] priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   * \param[in] stackSize The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   */
-visarCamera::visarCamera(const char *portName, const char *dataPortName,
+visarCamera::visarCamera(const char *portName, const char *controlPortName, const char *dataPortName,
                          int maxBuffers, size_t maxMemory, int priority, int stackSize)
 
         : ADDriver(portName, 1, NUM_SD_PARAMS, maxBuffers, maxMemory, 0, 0, ASYN_CANBLOCK | ASYN_MULTIDEVICE, 1,
@@ -184,11 +170,17 @@ visarCamera::visarCamera(const char *portName, const char *dataPortName,
     static const char *functionName = "visarCamera";
 
     int status = asynSuccess;
+    controlPortName_ = epicsStrDup(controlPortName);
     dataPortName_ = epicsStrDup(dataPortName);
 
     startEventId_ = epicsEventCreate(epicsEventEmpty);
     if (!this->startEventId_) {
         printf("%s:%s epicsEventCreate failure for run event\n", driverName, functionName);
+        return;
+    }
+    NewFrame = epicsEventCreate(epicsEventEmpty);
+    if (!this->NewFrame) {
+        printf("%s:%s epicsEventCreate failure for new frame event\n", driverName, functionName);
         return;
     }
 
@@ -198,15 +190,13 @@ visarCamera::visarCamera(const char *portName, const char *dataPortName,
     status |= setIntegerParam(ADMaxSizeY, SIZE_Y);
     status |= setIntegerParam(ADMinX, 0);
     status |= setIntegerParam(ADMinY, 0);
+    status |= setIntegerParam(NDDataType, NDUInt16);
+    status |= setIntegerParam(NDBitsPerPixel, 16);
 
-    createParam(VisarStartAcquisitionString, asynParamInt32, &StartAcquisition);
     createParam(VisarFrameReadyString, asynParamInt32, &VisarFrameReady);
-    createParam(VisarGetFrameString, asynParamInt32, &GetFrame);
-    createParam(VisarNewFrameString, asynParamInt32, &NewFrame);
-    createParam(VisarStartAppString, asynParamInt32, &StartApp);
-    createParam(VisarStopAppString, asynParamInt32, &StopApp);
+    createParam(VisarStartAcquisitionString, asynParamInt32, &StartAcquisition);
     createParam(VisarStopAcquisitionString, asynParamInt32, &StopAcquisition);
-
+    createParam(VisarFrameRateString, asynParamFloat64, &FrameRate);
 
     status |= connectCamera();
     if (status) {
@@ -221,7 +211,7 @@ visarCamera::visarCamera(const char *portName, const char *dataPortName,
 
     /* Launch image read task */
     epicsThreadCreate("VisarCameraImageTask",
-                      epicsThreadPriorityMedium,
+                      epicsThreadPriorityHigh + 9,
                       epicsThreadGetStackSize(epicsThreadStackMedium),
                       imageGrabTaskC, this);
 
@@ -233,8 +223,11 @@ visarCamera::visarCamera(const char *portName, const char *dataPortName,
 asynStatus visarCamera::connectCamera(void) {
 
     static const char *functionName = "visarCamera::connectCamera";
-
     int status = asynSuccess;
+    size_t cnt = 0;
+    int eom = 0, off = 0;
+    char buf[256], *s, *t;
+    asynUser *pasynUserCtrl;
 
     status |= pasynOctetSyncIO->connect(dataPortName_, 0, &pasynUserData_, NULL);
     if (status) {
@@ -242,34 +235,48 @@ asynStatus visarCamera::connectCamera(void) {
                driverName, functionName, status, pasynUserData_->errorMessage);
         return ((asynStatus) status);
     }
-
-    int startApp;
-    getIntegerParam(StartApp, &startApp);
-    status |= setIntegerParam(StartApp, !startApp);
-
+    
+    /* We start the app here directly! */
+    status |= pasynOctetSyncIO->connect(controlPortName_, 0, &pasynUserCtrl, NULL);
+    status |= pasynOctetSyncIO->write(pasynUserCtrl, "AppStart()\r", 11, 1.0, &cnt);
+    for (;;) {
+        pasynOctetSyncIO->read(pasynUserCtrl, &buf[off], sizeof(buf) - off, 1.0, &cnt, &eom);
+        buf[cnt] = 0;
+        for (s = t = buf; *t; t++) {
+            if (*t == '\r') {
+                *t = 0;
+                if (*s == '0')  // "0,AppStart", presumably!
+                    break;
+                s = t + 1;
+            }
+        }
+        if (*s == '0')
+            break;
+        off = 0;
+        if (*s) {
+            // Sigh.  A partial line.
+            for (t = buf; *s; *t++ = *s++)
+                off++;
+        }
+    }
+    status |= pasynOctetSyncIO->disconnect(pasynUserCtrl);
     return ((asynStatus) status);
-
 }
 
 /** Disconnects to camera.
  *  Stops the Visar camera app*/
 asynStatus visarCamera::disconnectCamera() {
-
     // static const char *functionName = "visarCamera::disconnectCamera";
 
     int status = asynSuccess;
-
-    int stopApp;
-    getIntegerParam(StopApp, &stopApp);
-    status |= setIntegerParam(StopApp, !stopApp);
-
+    /* We don't really want to stop the app!!! This doesn't work anyway... */
     return ((asynStatus) status);
 }
 
 /** Starts acquisition and activates live monitor. */
 asynStatus visarCamera::startCapture() {
 
-    static const char *functionName = "startCapture";
+    // static const char *functionName = "startCapture";
 
     /* Start the camera transmission... */
     setIntegerParam(ADNumImagesCounter, 0);
@@ -290,7 +297,7 @@ asynStatus visarCamera::startCapture() {
 /** Stops acquisition and deactivates live monitor. */
 asynStatus visarCamera::stopCapture() {
 
-    static const char *functionName = "stopCapture";
+    // static const char *functionName = "stopCapture";
 
     int status = asynSuccess;
 
@@ -330,8 +337,7 @@ void visarCamera::imageGrabTask() {
 
         /* If we are not acquiring then wait for a semaphore that is given when acquisition is started */
         if (!acquire) {
-
-            status |= setIntegerParam(ADStatus, ADStatusIdle);
+            setIntegerParam(ADStatus, ADStatusIdle);
             callParamCallbacks();
 
             /* Wait for a signal that tells this thread that the transmission
@@ -362,9 +368,9 @@ void visarCamera::imageGrabTask() {
         /* Call the callbacks to update any changes */
         callParamCallbacks();
 
-        // Grab a new frame
-        status |= grabImage();
-        if (status == asynError) {
+        // Grab a new frame and *set* the status!
+        status = grabImage();
+        if (status != asynSuccess) {
             /* remember to release the NDArray back to the pool now
              * that we are not using it (we didn't get an image...) */
             if (pRaw_) pRaw_->release();
@@ -382,11 +388,13 @@ void visarCamera::imageGrabTask() {
         numImagesCounter++;
         setIntegerParam(NDArrayCounter, imageCounter);
         setIntegerParam(ADNumImagesCounter, numImagesCounter);
+        setIntegerParam(NDBitsPerPixel, 16);
 
         /* Put the frame number and time stamp into the buffer */
         pRaw_->uniqueId = imageCounter;
-        pRaw_->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
+        //pRaw_->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
         updateTimeStamp(&pRaw_->epicsTS);
+        pRaw_->timeStamp = pRaw_->epicsTS.secPastEpoch + pRaw_->epicsTS.nsec/1e9;
 
         if (arrayCallbacks) {
             /* Call the NDArray callback */
@@ -413,7 +421,6 @@ void visarCamera::imageGrabTask() {
 
 /** Get a new frame. */
 asynStatus visarCamera::grabImage() {
-
     static const char *functionName = "grabImage";
 
     int status = asynSuccess;
@@ -430,10 +437,7 @@ asynStatus visarCamera::grabImage() {
     /* Wait until we receive a frame notification */
     status |= waitForFrameNotification();
 
-
-    /* Check if the aquisition was stopped */
-    status |= getIntegerParam(ADAcquire, &acquire);
-    if (!acquire) {
+    if (status != asynSuccess) {
         lock();
         return asynError;
     }
@@ -475,6 +479,7 @@ asynStatus visarCamera::grabImage() {
                   "%s::%s [%s] ERROR: Serious problem: not enough buffers left! Aborting acquisition!\n",
                   driverName, functionName, portName);
         setIntegerParam(ADAcquire, 0);
+        callParamCallbacks();
         return (asynError);
     }
 
@@ -498,23 +503,14 @@ asynStatus visarCamera::waitForFrameNotification() {
     static const char *functionName = "waitForFrameNotification";
 
     int acquire;
-    int newFrame;
     int frame;
 
     while (1) {
-        getIntegerParam(NewFrame, &newFrame);
-        if (newFrame) {
-            setIntegerParam(NewFrame, 0);
-            callParamCallbacks();
+        if (epicsEventWaitWithTimeout(NewFrame, 0.2) == epicsEventWaitOK) {
             getIntegerParam(VisarFrameReady, &frame);
-
-             printf("New frame ready \n");
-             printf("%d\n", frame);
-
             asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
                       "%s::%s New frame ready: %d\n",
                       driverName, functionName,frame);
-
             return asynSuccess;
         }
 
@@ -532,25 +528,33 @@ asynStatus visarCamera::getRawFrame() {
 
     const char *functionName = "getRawFrame";
 
-    size_t nread;
+    size_t nread, nwrite;
     int status = asynSuccess;
     int eomReason;
-    int getFrame;
+    asynUser *pasynUserCtrl;
+
+    status |= pasynOctetSyncIO->connect(controlPortName_, 0, &pasynUserCtrl, NULL);
+    if (status) {
+        printf("%s:%s: error calling pasynOctetSyncIO->connect for data socket, status=%d, error=%s\n",
+               driverName, functionName, status, pasynUserData_->errorMessage);
+        return ((asynStatus) status);
+    }
 
     pasynOctetSyncIO->flush(pasynUserData_);
 
-    status |= getIntegerParam(GetFrame, &getFrame);
-    status |= setIntegerParam(GetFrame, !getFrame);
+    status |= pasynOctetSyncIO->write(pasynUserCtrl, "ImgDataGet(Current,Data)\r",
+                                      25, 1.0, &nwrite);
 
     size_t read_buffer_len = SIZE_X * SIZE_Y * BPP;
 
-  //  read_buffer_len = 1344*1024*2;
-
-    status |= pasynOctetSyncIO->read(pasynUserData_, rawFrame_, read_buffer_len, .5, &nread, &eomReason);
+    status |= pasynOctetSyncIO->read(pasynUserData_, rawFrame_, read_buffer_len, 2.0, &nread, &eomReason);
     if (status != asynSuccess) {
-        asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "%s:%s: read frame error!\n", driverName, functionName);
+        asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "%s:%s: read frame error, nread=%d, eomReason=%d, status=%d!\n",
+                  driverName, functionName, (int)nread, eomReason, status);
+        //pasynOctetSyncIO->flush(pasynUserData_);
     }
 
+    status |= pasynOctetSyncIO->disconnect(pasynUserCtrl);
     return ((asynStatus) status);
 }
 
@@ -605,7 +609,8 @@ asynStatus visarCamera::writeInt32(asynUser *pasynUser, epicsInt32 value) {
     } else if (function == VisarFrameReady) {
         getIntegerParam(function, &frame);
         if (value != frame) {
-            setIntegerParam(NewFrame, 1);
+            if (acquire)
+                epicsEventSignal(NewFrame);
             setIntegerParam(function, value);
         }
     } else {
@@ -661,24 +666,26 @@ asynStatus visarCamera::writeFloat64(asynUser *pasynUser, epicsFloat64 value) {
 /** Code for iocsh registration */
 
 static const iocshArg visarCameraConfigArg0 = {"Port name", iocshArgString};
-static const iocshArg visarCameraConfigArg1 = {"Data asyn port name", iocshArgString};
-static const iocshArg visarCameraConfigArg2 = {"maxBuffers", iocshArgInt};
-static const iocshArg visarCameraConfigArg3 = {"maxMemory", iocshArgInt};
-static const iocshArg visarCameraConfigArg4 = {"priority", iocshArgInt};
-static const iocshArg visarCameraConfigArg5 = {"stackSize", iocshArgInt};
+static const iocshArg visarCameraConfigArg1 = {"Control asyn port name", iocshArgString};
+static const iocshArg visarCameraConfigArg2 = {"Data asyn port name", iocshArgString};
+static const iocshArg visarCameraConfigArg3 = {"maxBuffers", iocshArgInt};
+static const iocshArg visarCameraConfigArg4 = {"maxMemory", iocshArgInt};
+static const iocshArg visarCameraConfigArg5 = {"priority", iocshArgInt};
+static const iocshArg visarCameraConfigArg6 = {"stackSize", iocshArgInt};
 static const iocshArg *const visarCameraConfigArgs[] = {&visarCameraConfigArg0,
                                                         &visarCameraConfigArg1,
                                                         &visarCameraConfigArg2,
                                                         &visarCameraConfigArg3,
                                                         &visarCameraConfigArg4,
                                                         &visarCameraConfigArg5,
+                                                        &visarCameraConfigArg6,
                                                         };
 
-static const iocshFuncDef configvisarcamera = {"visarCameraConfig", 6, visarCameraConfigArgs};
+static const iocshFuncDef configvisarcamera = {"visarCameraConfig", 7, visarCameraConfigArgs};
 
 static void configvisarcameraCallFunc(const iocshArgBuf *args) {
-    visarCameraConfig(args[0].sval, args[1].sval,
-                      args[2].ival, args[3].ival, args[4].ival, args[5].ival);
+    visarCameraConfig(args[0].sval, args[1].sval, args[2].sval,
+                      args[3].ival, args[4].ival, args[5].ival, args[6].ival);
 }
 
 static void visarCameraRegister(void) {
@@ -710,14 +717,15 @@ double sciToDub(const string &str) {
     return (d);
 }
 
-static double get_calibration(char *path, char *time_range, double *cal) {
+static double get_calibration(char *path, char *time_range, double *cal,
+                              double *cal_factor, char *cal_string) {
 
     ifstream infile;
     char cNum[256];
 
     string runits;
     double c0, c1, c2;
-    double factor;
+    double factor = 1;
 
     vector <vector <string> > data;
 
@@ -737,8 +745,17 @@ static double get_calibration(char *path, char *time_range, double *cal) {
             data.push_back(record);
         }
         infile.close();
-
-        for (int k = 3; k < data.size(); k++) {
+        
+        infile.open(path);
+        
+        stringstream strStream;
+        strStream << infile.rdbuf();
+        string str = strStream.str();
+        strcpy(cal_string, str.c_str());
+        
+        infile.close();
+  
+        for (unsigned int k = 3; k < data.size(); k++) {
             vector <string> time_cal = data[k];
 
             if (time_cal[0].compare(time_range) == 0) {
@@ -758,8 +775,18 @@ static double get_calibration(char *path, char *time_range, double *cal) {
 
                 cal[0] = 0;
                 for (int n = 1; n < 1344; n++) {
-                    cal[n] = (cal[n - 1] + c0 + c1 * n + c2 * n * n) * factor;
+                    cal[n] = cal[n - 1] + (c0 + c1 * n + c2 * n * n) * factor;
                 }
+                double xy_sum = 0;
+                double xx_sum = 0;
+                for (int x = 1; x < 1344; x++) {
+                    xy_sum = xy_sum+  ( x * cal[x] );
+                    xx_sum = xx_sum + ( x * x );
+                }
+
+                cal_factor[0] = xy_sum / xx_sum;
+
+                cout << "Linear Factor: " << cal_factor[0] << " sec/pixel\n";
                 return 0;
             }
         }
@@ -778,11 +805,14 @@ static long read_calibration_file_subprocess(aSubRecord *prec) {
 
     char *path, *time_range;
 
-    path = (char *) prec->a;
+    path       = (char *) prec->a;
     time_range = (char *) prec->b;
 
     double *vala = (double *) prec->vala;
-    get_calibration(path, time_range, vala);
+    double *valb = (double *) prec->valb;
+    char   *valc = (char *)   prec->valc;
+    
+    get_calibration(path, time_range, vala, valb, valc);
 
     return 0; /* process output links */
 }

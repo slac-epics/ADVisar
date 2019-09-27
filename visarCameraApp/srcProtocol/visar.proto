@@ -38,7 +38,7 @@ get_exposure_time{
     InTerminator = ;
     ExtraInput   = Ignore;
 	out "CamParamGet(Live,Exposure)";
-	in  "%*/(?m)0,CamParamGet,/%f %(\$1AcquireTimeVisarUnits_RBV){us|ms|s|m}\r";
+	in  "%*/(?m)0,CamParamGet,/%f %(\$1AcquireTimeVisarUnits_RBV){us|ms|s|min}\r";
 }
 
 #########################################
@@ -56,9 +56,8 @@ set_II_gain{
 get_II_gain{
     InTerminator = "";
     ExtraInput   = Ignore;
-    out "DevParamGet(TD,II-Gain)";
-#	in  "%*/(.?)\r/0,DevParamGet,%s\r%*/(.?)\r";
-	in "%.2/([WF].*\r)*0,DevParamGet,([0-9]+)/"
+        out "DevParamGet(TD,II-Gain)";
+        in "%*/(?m)0,DevParamGet,/%d\r"
 }
 
 #########################################
@@ -254,23 +253,3 @@ start_capture{
 stop_capture{
    out "AcqStop()";
 }
-
-#visar.proto
-
-#########################################
-#  Open Application                     #
-#########################################
-
-start_app{
-    out "AppStart()";
-}
-
-#########################################
-#  Close Application                    #
-#########################################
-
-stop_app{
-    out "AppEnd()";
-}
-
-
